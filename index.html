@@ -1,0 +1,1752 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FieldAssist · SteerCo Intelligence</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,400&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<style>
+:root {
+  --bg: #060E1C;
+  --surface: #0A1628;
+  --card: #0F1F36;
+  --card2: #132540;
+  --border: rgba(255,255,255,0.07);
+  --border-bright: rgba(255,255,255,0.14);
+  --text: #E8F0FF;
+  --text-mid: #7A95B5;
+  --text-dim: #3D5875;
+  --gold: #E8A838;
+  --gold-d: rgba(232,168,56,0.15);
+  --teal: #00C9A7;
+  --teal-d: rgba(0,201,167,0.12);
+  --red: #FF4757;
+  --red-d: rgba(255,71,87,0.12);
+  --amber: #FFB830;
+  --amber-d: rgba(255,184,48,0.12);
+  --blue: #4A9EFF;
+  --blue-d: rgba(74,158,255,0.12);
+  --purple: #9B7FFF;
+  --purple-d: rgba(155,127,255,0.12);
+  --sidebar-w: 220px;
+  --header-h: 64px;
+}
+
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;display:flex;overflow-x:hidden}
+::-webkit-scrollbar{width:4px;height:4px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--border-bright);border-radius:2px}
+
+/* ── SIDEBAR ── */
+#sidebar{width:var(--sidebar-w);min-height:100vh;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;position:fixed;left:0;top:0;z-index:100;overflow-y:auto}
+.sb-logo{padding:22px 20px 16px;border-bottom:1px solid var(--border)}
+.sb-logo-line1{font-family:'Syne',sans-serif;font-size:11px;font-weight:600;letter-spacing:.18em;text-transform:uppercase;color:var(--text-mid);margin-bottom:5px}
+.sb-logo-line2{font-family:'Syne',sans-serif;font-size:18px;font-weight:800;color:var(--gold);line-height:1.1}
+.sb-session{padding:14px 20px;border-bottom:1px solid var(--border);background:var(--gold-d)}
+.sb-session-num{font-family:'Syne',sans-serif;font-size:11px;font-weight:700;color:var(--gold);letter-spacing:.12em;text-transform:uppercase}
+.sb-session-date{font-size:12px;color:var(--text-mid);margin-top:3px}
+.sb-nav{padding:12px 0;flex:1}
+.sb-section-label{padding:10px 20px 4px;font-size:9px;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:var(--text-dim)}
+.nav-item{display:flex;align-items:center;gap:10px;padding:9px 20px;cursor:pointer;color:var(--text-mid);font-size:12px;font-weight:500;transition:all .15s;border-left:2px solid transparent;position:relative}
+.nav-item:hover{color:var(--text);background:rgba(255,255,255,0.03)}
+.nav-item.active{color:var(--gold);border-left-color:var(--gold);background:var(--gold-d)}
+.nav-icon{font-size:13px;width:16px;text-align:center;flex-shrink:0}
+.nav-badge{margin-left:auto;background:var(--red);color:white;font-size:9px;font-weight:700;padding:2px 6px;border-radius:8px}
+.sb-footer{padding:16px 20px;border-top:1px solid var(--border)}
+.sync-dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--teal);margin-right:6px;animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+.sync-label{font-size:11px;color:var(--text-mid)}
+.brief-btn{width:100%;margin-top:12px;padding:10px;background:linear-gradient(135deg,var(--gold),#F5C46A);color:#0A1628;font-family:'Syne',sans-serif;font-weight:700;font-size:11px;letter-spacing:.08em;text-transform:uppercase;border:none;border-radius:8px;cursor:pointer;transition:all .2s}
+.brief-btn:hover{transform:translateY(-1px);box-shadow:0 6px 20px rgba(232,168,56,.4)}
+
+/* ── MAIN ── */
+#main{margin-left:var(--sidebar-w);flex:1;min-height:100vh}
+.page{display:none;animation:fadeIn .3s ease}
+.page.active{display:block}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+
+/* ── PAGE HEADER ── */
+.page-hdr{padding:24px 32px 20px;border-bottom:1px solid var(--border);background:var(--surface);display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50}
+.page-hdr-left h1{font-family:'Syne',sans-serif;font-size:24px;font-weight:800;color:var(--text)}
+.page-hdr-left p{font-size:12px;color:var(--text-mid);margin-top:3px}
+.page-body{padding:28px 32px}
+
+/* ── KPI CARDS ── */
+.kpi-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:14px;margin-bottom:24px}
+.kpi-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:20px;position:relative;overflow:hidden;transition:all .2s}
+.kpi-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px}
+.kpi-card.gold::before{background:linear-gradient(90deg,var(--gold),transparent)}
+.kpi-card.teal::before{background:linear-gradient(90deg,var(--teal),transparent)}
+.kpi-card.red::before{background:linear-gradient(90deg,var(--red),transparent)}
+.kpi-card.amber::before{background:linear-gradient(90deg,var(--amber),transparent)}
+.kpi-card.blue::before{background:linear-gradient(90deg,var(--blue),transparent)}
+.kpi-card.purple::before{background:linear-gradient(90deg,var(--purple),transparent)}
+.kpi-label{font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--text-dim);margin-bottom:10px}
+.kpi-value{font-family:'Syne',sans-serif;font-size:32px;font-weight:800;line-height:1;margin-bottom:6px}
+.kpi-value.gold{color:var(--gold)}
+.kpi-value.teal{color:var(--teal)}
+.kpi-value.red{color:var(--red)}
+.kpi-value.amber{color:var(--amber)}
+.kpi-value.blue{color:var(--blue)}
+.kpi-value.purple{color:var(--purple)}
+.kpi-sub{font-size:11px;color:var(--text-mid)}
+.kpi-trend{position:absolute;bottom:16px;right:16px;font-size:18px;opacity:.4}
+.kpi-card.clickable{cursor:pointer}
+.kpi-card.clickable:hover{border-color:var(--border-bright);background:var(--card2)}
+
+/* ── SECTION CARDS ── */
+.s-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:22px;margin-bottom:16px}
+.s-card-title{font-family:'Syne',sans-serif;font-size:12px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--text-mid);margin-bottom:18px;display:flex;align-items:center;justify-content:space-between}
+.s-card-title span{color:var(--text-dim);font-weight:400;font-size:11px;text-transform:none;letter-spacing:0}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px}
+.grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-bottom:16px}
+.grid-4{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:16px}
+
+/* ── TABLES ── */
+.t-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:12px}
+thead tr{border-bottom:1px solid var(--border)}
+th{padding:10px 12px;text-align:left;font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--text-dim);white-space:nowrap}
+td{padding:11px 12px;border-bottom:1px solid var(--border);vertical-align:middle;color:var(--text-mid)}
+td strong{color:var(--text)}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:rgba(255,255,255,0.02)}
+
+/* ── BADGES ── */
+.badge{display:inline-flex;align-items:center;padding:3px 10px;border-radius:20px;font-size:10px;font-weight:700;letter-spacing:.04em;white-space:nowrap}
+.bg-teal{background:var(--teal-d);color:var(--teal);border:1px solid rgba(0,201,167,.2)}
+.bg-red{background:var(--red-d);color:var(--red);border:1px solid rgba(255,71,87,.2)}
+.bg-amber{background:var(--amber-d);color:var(--amber);border:1px solid rgba(255,184,48,.2)}
+.bg-blue{background:var(--blue-d);color:var(--blue);border:1px solid rgba(74,158,255,.2)}
+.bg-gold{background:var(--gold-d);color:var(--gold);border:1px solid rgba(232,168,56,.2)}
+.bg-purple{background:var(--purple-d);color:var(--purple);border:1px solid rgba(155,127,255,.2)}
+.bg-dim{background:rgba(255,255,255,.05);color:var(--text-mid);border:1px solid var(--border)}
+
+/* ── BUTTONS ── */
+.btn{padding:9px 18px;border-radius:8px;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:600;cursor:pointer;border:none;transition:all .15s}
+.btn-primary{background:var(--gold);color:#0A1628}
+.btn-primary:hover{background:#F5C46A}
+.btn-secondary{background:rgba(255,255,255,.06);color:var(--text);border:1px solid var(--border)}
+.btn-secondary:hover{border-color:var(--border-bright);background:rgba(255,255,255,.09)}
+.btn-ghost{background:transparent;color:var(--text-mid);border:1px solid var(--border);padding:6px 12px;font-size:11px}
+.btn-ghost:hover{color:var(--text);border-color:var(--border-bright)}
+.btn-danger{background:var(--red-d);color:var(--red);border:1px solid rgba(255,71,87,.25)}
+.btn-sm{padding:5px 12px;font-size:11px}
+.btn-teal{background:var(--teal-d);color:var(--teal);border:1px solid rgba(0,201,167,.25)}
+
+/* ── FORMS ── */
+.field{display:flex;flex-direction:column;gap:6px;margin-bottom:12px}
+.field label{font-size:11px;font-weight:600;color:var(--text-mid);text-transform:uppercase;letter-spacing:.07em}
+.field input,.field select,.field textarea{padding:10px 12px;background:rgba(255,255,255,.04);border:1.5px solid var(--border);border-radius:8px;font-family:'DM Sans',sans-serif;font-size:13px;color:var(--text);outline:none;transition:border-color .15s}
+.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--gold)}
+.field textarea{resize:vertical;min-height:70px}
+.field select option{background:#0F1F36;color:var(--text)}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.form-row-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+
+/* ── PROGRESS BARS ── */
+.progress-track{height:6px;background:rgba(255,255,255,.08);border-radius:3px;overflow:hidden;margin-top:6px}
+.progress-fill{height:100%;border-radius:3px;transition:width .6s ease}
+
+/* ── NRR HERO ── */
+.nrr-hero{background:linear-gradient(135deg,#0D1E38 0%,#111F38 50%,#0A192E 100%);border:1px solid rgba(232,168,56,.2);border-radius:16px;padding:28px;margin-bottom:16px;display:grid;grid-template-columns:auto 1fr 1fr 1fr;gap:32px;align-items:center}
+.nrr-main-val{font-family:'Syne',sans-serif;font-size:56px;font-weight:800;color:var(--gold);line-height:1}
+.nrr-main-label{font-size:11px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--text-dim);margin-bottom:6px}
+.nrr-stat-val{font-family:'Syne',sans-serif;font-size:22px;font-weight:700}
+.nrr-stat-label{font-size:11px;color:var(--text-dim);margin-top:4px}
+.nrr-divider{width:1px;height:60px;background:var(--border);align-self:center}
+
+/* ── COMMITMENT CARDS ── */
+.commit-card{background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:14px 16px;margin-bottom:8px;transition:all .15s}
+.commit-card:hover{border-color:var(--border-bright)}
+.commit-card.closed{opacity:.5}
+.commit-header{display:flex;align-items:flex-start;gap:10px;margin-bottom:8px}
+.commit-num{font-family:'DM Mono',monospace;font-size:10px;color:var(--text-dim);padding:3px 7px;background:rgba(255,255,255,.05);border-radius:4px;flex-shrink:0;margin-top:1px}
+.commit-text{font-size:13px;color:var(--text);flex:1;line-height:1.5}
+.commit-meta{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.commit-meta span{font-size:11px;color:var(--text-dim)}
+
+/* ── BOTTLENECK CARDS ── */
+.blocker-card{background:var(--card2);border:1px solid var(--border);border-radius:12px;padding:18px;margin-bottom:10px;border-left:3px solid var(--red)}
+.blocker-card.medium{border-left-color:var(--amber)}
+.blocker-card.low{border-left-color:var(--text-dim)}
+.blocker-title{font-size:14px;font-weight:600;color:var(--text);margin-bottom:6px}
+.blocker-ask{font-size:12px;color:var(--text-mid);margin-top:8px;padding:8px 12px;background:rgba(255,255,255,.03);border-radius:6px;border-left:2px solid var(--gold)}
+.blocker-meta{display:flex;align-items:center;gap:8px;margin-top:10px;flex-wrap:wrap}
+
+/* ── WIN CARDS ── */
+.win-card{background:var(--card2);border:1px solid var(--border);border-radius:12px;padding:18px;margin-bottom:10px;border-left:3px solid var(--teal)}
+.win-card.expansion{border-left-color:var(--gold)}
+.win-card.process{border-left-color:var(--blue)}
+.win-card.relationship{border-left-color:var(--purple)}
+.win-title{font-size:14px;font-weight:600;color:var(--text);margin-bottom:4px}
+.win-detail{font-size:12px;color:var(--text-mid);line-height:1.5}
+
+/* ── HEALTH MATRIX ── */
+.health-bar-row{display:flex;align-items:center;gap:12px;margin-bottom:10px}
+.health-bar-label{font-size:11px;color:var(--text-mid);width:130px;flex-shrink:0}
+.health-bar-track{flex:1;height:8px;background:rgba(255,255,255,.06);border-radius:4px;overflow:hidden}
+.health-bar-fill{height:100%;border-radius:4px}
+.health-bar-val{font-size:12px;font-weight:600;width:36px;text-align:right}
+
+/* ── CHART CONTAINERS ── */
+.chart-wrap{position:relative;height:200px}
+.chart-wrap-sm{position:relative;height:160px}
+.chart-wrap-lg{position:relative;height:260px}
+canvas{max-height:100%}
+
+/* ── RISK GAUGE ── */
+.risk-banner{background:var(--red-d);border:1px solid rgba(255,71,87,.2);border-radius:12px;padding:18px 22px;margin-bottom:16px;display:flex;align-items:center;gap:20px}
+.risk-mrr{font-family:'Syne',sans-serif;font-size:36px;font-weight:800;color:var(--red)}
+.risk-label{font-size:12px;color:var(--text-mid);margin-top:3px}
+
+/* ── MODAL ── */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);backdrop-filter:blur(4px);z-index:1000;align-items:center;justify-content:center}
+.modal-overlay.open{display:flex}
+.modal{background:var(--card);border:1px solid var(--border-bright);border-radius:16px;padding:28px;width:560px;max-width:94vw;max-height:88vh;overflow-y:auto;box-shadow:0 24px 64px rgba(0,0,0,.5)}
+.modal h2{font-family:'Syne',sans-serif;font-size:18px;font-weight:800;margin-bottom:20px;color:var(--text)}
+.modal-footer{display:flex;gap:10px;justify-content:flex-end;margin-top:20px;padding-top:16px;border-top:1px solid var(--border)}
+
+/* ── TOAST ── */
+#toast{position:fixed;bottom:24px;right:24px;background:var(--card2);border:1px solid var(--border-bright);color:var(--text);padding:12px 18px;border-radius:10px;font-size:13px;font-weight:500;z-index:9999;transform:translateY(80px);opacity:0;transition:all .3s;pointer-events:none;display:flex;align-items:center;gap:10px;box-shadow:0 8px 32px rgba(0,0,0,.4)}
+#toast.show{transform:translateY(0);opacity:1}
+
+/* ── CONTEXT NOTE ── */
+.context-note{background:var(--gold-d);border:1px solid rgba(232,168,56,.2);border-radius:10px;padding:14px 16px;margin-bottom:16px}
+.context-note textarea{background:transparent;border:none;color:var(--text);font-family:'DM Sans',sans-serif;font-size:13px;line-height:1.6;width:100%;resize:vertical;min-height:60px;outline:none}
+.context-note-label{font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--gold);margin-bottom:8px;display:flex;align-items:center;gap:6px}
+
+/* ── FUNNEL ── */
+.funnel-bar{display:flex;align-items:center;gap:12px;margin-bottom:8px}
+.funnel-label{font-size:11px;color:var(--text-mid);width:120px;flex-shrink:0}
+.funnel-track{flex:1;height:28px;background:rgba(255,255,255,.04);border-radius:4px;position:relative;overflow:hidden}
+.funnel-fill{height:100%;border-radius:4px;display:flex;align-items:center;padding-left:10px;font-size:11px;font-weight:600;color:rgba(255,255,255,.9);transition:width .6s ease}
+.funnel-count{font-size:11px;color:var(--text-mid);width:60px;text-align:right}
+.funnel-mrr{font-size:11px;font-weight:600;width:90px;text-align:right}
+
+/* ── ATTENDEE CHIPS ── */
+.attendees-wrap{padding:12px 20px;border-top:1px solid var(--border)}
+.attendee-label{font-size:9px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--text-dim);margin-bottom:8px}
+.attendee-chips{display:flex;flex-wrap:wrap;gap:5px}
+.attendee-chip{font-size:10px;padding:3px 9px;background:rgba(255,255,255,.06);border:1px solid var(--border);border-radius:12px;color:var(--text-mid);cursor:pointer;transition:all .15s}
+.attendee-chip.present{background:var(--teal-d);border-color:rgba(0,201,167,.3);color:var(--teal)}
+
+/* ── EMPTY STATE ── */
+.empty{text-align:center;padding:48px 24px;color:var(--text-dim)}
+.empty .empty-icon{font-size:36px;margin-bottom:12px;opacity:.4}
+.empty p{font-size:13px}
+
+/* ── SEPARATOR ── */
+.sep{height:1px;background:var(--border);margin:20px 0}
+
+/* ── INDICATOR RINGS ── */
+.ring-wrap{display:flex;flex-direction:column;align-items:center;gap:6px}
+.ring-val{font-family:'Syne',sans-serif;font-size:22px;font-weight:800}
+.ring-label{font-size:10px;color:var(--text-dim);text-align:center;line-height:1.3}
+
+/* ── ANNOTATION LABEL ── */
+.anno-tag{display:inline-flex;align-items:center;gap:4px;font-size:10px;padding:2px 8px;border-radius:10px;font-weight:600;border:1px solid}
+.anno-decision{background:rgba(155,127,255,.12);color:var(--purple);border-color:rgba(155,127,255,.25)}
+.anno-resource{background:var(--gold-d);color:var(--gold);border-color:rgba(232,168,56,.25)}
+.anno-escalation{background:var(--red-d);color:var(--red);border-color:rgba(255,71,87,.25)}
+.anno-process{background:var(--blue-d);color:var(--blue);border-color:rgba(74,158,255,.25)}
+
+/* ── STAGGER ANIMATION ── */
+.stagger > *{animation:fadeIn .4s ease backwards}
+.stagger > *:nth-child(1){animation-delay:.05s}
+.stagger > *:nth-child(2){animation-delay:.10s}
+.stagger > *:nth-child(3){animation-delay:.15s}
+.stagger > *:nth-child(4){animation-delay:.20s}
+.stagger > *:nth-child(5){animation-delay:.25s}
+</style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════════════ SIDEBAR -->
+<div id="sidebar">
+  <div class="sb-logo">
+    <div class="sb-logo-line1">FieldAssist</div>
+    <div class="sb-logo-line2">SteerCo<br>Intelligence</div>
+  </div>
+  <div class="sb-session" id="sb-session-info">
+    <div class="sb-session-num">Session #<span id="sb-num">—</span></div>
+    <div class="sb-session-date" id="sb-date">—</div>
+  </div>
+  <nav class="sb-nav">
+    <div class="sb-section-label">Command</div>
+    <div class="nav-item active" onclick="showPage('hub',this)"><span class="nav-icon">⬡</span>SteerCo Hub</div>
+    <div class="nav-item" onclick="showPage('portfolio',this)"><span class="nav-icon">◎</span>Portfolio Health</div>
+    <div class="sb-section-label">Execution</div>
+    <div class="nav-item" onclick="showPage('commitments',this)"><span class="nav-icon">✓</span>Commitments<span class="nav-badge" id="badge-commit" style="display:none">0</span></div>
+    <div class="nav-item" onclick="showPage('risk',this)"><span class="nav-icon">⚠</span>Risk Register</div>
+    <div class="nav-item" onclick="showPage('growth',this)"><span class="nav-icon">↑</span>Growth Engine</div>
+    <div class="sb-section-label">Intelligence</div>
+    <div class="nav-item" onclick="showPage('indicators',this)"><span class="nav-icon">◈</span>Leading Indicators</div>
+    <div class="nav-item" onclick="showPage('bottlenecks',this)"><span class="nav-icon">⊘</span>Bottlenecks & Asks<span class="nav-badge" id="badge-blocks" style="display:none">0</span></div>
+    <div class="nav-item" onclick="showPage('momentum',this)"><span class="nav-icon">★</span>Momentum</div>
+  </nav>
+  <div class="attendees-wrap">
+    <div class="attendee-label">In the Room</div>
+    <div class="attendee-chips" id="attendee-chips"></div>
+  </div>
+  <div class="sb-footer">
+    <div style="display:flex;align-items:center;justify-content:space-between">
+      <div><span class="sync-dot" id="sync-dot"></span><span class="sync-label" id="sync-label">Connected</span></div>
+      <button class="btn-ghost btn-sm" onclick="fetchData()">↻ Sync</button>
+    </div>
+    <div style="font-size:10px;color:var(--text-dim);margin-top:4px" id="last-sync">—</div>
+    <button class="brief-btn" onclick="generateBrief()">✦ Prepare AI Brief</button>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════ MAIN -->
+<div id="main">
+
+<!-- ── HUB ── -->
+<div id="page-hub" class="page active">
+  <div class="page-hdr">
+    <div class="page-hdr-left">
+      <h1>SteerCo Hub</h1>
+      <p id="hub-subtitle">Leadership intelligence — loaded from Command Centre data</p>
+    </div>
+    <div style="display:flex;gap:10px;align-items:center">
+      <button class="btn btn-secondary btn-sm" onclick="openSessionModal()">⚙ Session Settings</button>
+      <button class="btn btn-primary btn-sm" onclick="generateBrief()">✦ Prepare AI Brief</button>
+    </div>
+  </div>
+  <div class="page-body">
+    <!-- KPI ROW -->
+    <div class="kpi-grid stagger" id="hub-kpis">
+      <div class="kpi-card gold clickable" onclick="showPage('portfolio',document.querySelector('.nav-item:nth-child(2)'))">
+        <div class="kpi-label">NRR</div>
+        <div class="kpi-value gold" id="h-nrr">—</div>
+        <div class="kpi-sub" id="h-nrr-sub">Portfolio retention</div>
+        <div class="kpi-trend">◎</div>
+      </div>
+      <div class="kpi-card red clickable" onclick="showPage('risk',document.querySelectorAll('.nav-item')[4])">
+        <div class="kpi-label">MRR at Risk</div>
+        <div class="kpi-value red" id="h-risk-mrr">—</div>
+        <div class="kpi-sub" id="h-risk-sub">Accounts flagged</div>
+        <div class="kpi-trend">⚠</div>
+      </div>
+      <div class="kpi-card blue clickable" onclick="showPage('growth',document.querySelectorAll('.nav-item')[5])">
+        <div class="kpi-label">Pipeline MRR</div>
+        <div class="kpi-value blue" id="h-pipeline">—</div>
+        <div class="kpi-sub" id="h-pipeline-sub">Open opportunities</div>
+        <div class="kpi-trend">↑</div>
+      </div>
+      <div class="kpi-card amber">
+        <div class="kpi-label">Avg SKAM</div>
+        <div class="kpi-value amber" id="h-skam">—</div>
+        <div class="kpi-sub">Portfolio health score</div>
+        <div class="kpi-trend">◈</div>
+      </div>
+      <div class="kpi-card teal clickable" onclick="showPage('commitments',document.querySelectorAll('.nav-item')[3])">
+        <div class="kpi-label">Commitment Rate</div>
+        <div class="kpi-value teal" id="h-commit">—</div>
+        <div class="kpi-sub" id="h-commit-sub">From last session</div>
+        <div class="kpi-trend">✓</div>
+      </div>
+    </div>
+
+    <!-- TWO COLUMN -->
+    <div class="grid-2">
+      <!-- Health Matrix -->
+      <div class="s-card">
+        <div class="s-card-title">Portfolio Health Pulse</div>
+        <div id="health-matrix"></div>
+      </div>
+      <!-- SKAM mini trend -->
+      <div class="s-card">
+        <div class="s-card-title">SKAM Score Trend <span>Rolling 6 months</span></div>
+        <div class="chart-wrap"><canvas id="chart-hub-skam"></canvas></div>
+      </div>
+    </div>
+
+    <!-- THREE COLUMN: Context + Warnings + Momentum -->
+    <div class="grid-3">
+      <div class="s-card" style="grid-column:1/3">
+        <div class="s-card-title">SteerCo Context Note <span>Your narrative for this session</span></div>
+        <div class="context-note">
+          <div class="context-note-label">✦ Agenda Context</div>
+          <textarea id="ctx-hub" placeholder="Add context, key talking points, or agenda notes for this SteerCo session…" oninput="saveCtx('hub',this.value)"></textarea>
+        </div>
+        <div id="hub-early-warnings"></div>
+      </div>
+      <div class="s-card">
+        <div class="s-card-title">Momentum Snapshot</div>
+        <div id="hub-momentum"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── PORTFOLIO HEALTH ── -->
+<div id="page-portfolio" class="page">
+  <div class="page-hdr">
+    <div class="page-hdr-left"><h1>Portfolio Health</h1><p>NRR, SKAM trends, account distribution and early signals</p></div>
+    <button class="btn btn-secondary btn-sm" onclick="fetchData().then(loadPortfolio)">↻ Refresh</button>
+  </div>
+  <div class="page-body">
+    <div id="nrr-hero"></div>
+    <div class="grid-2">
+      <div class="s-card">
+        <div class="s-card-title">SKAM Score Trend <span>Monthly avg — last 6 months</span></div>
+        <div class="chart-wrap-lg"><canvas id="chart-port-skam"></canvas></div>
+      </div>
+      <div class="s-card">
+        <div class="s-card-title">Account Health Distribution</div>
+        <div class="chart-wrap"><canvas id="chart-health-dist"></canvas></div>
+        <div id="health-dist-legend" style="display:flex;justify-content:center;gap:20px;margin-top:12px;font-size:11px;color:var(--text-mid)"></div>
+      </div>
+    </div>
+    <div class="grid-2">
+      <div class="s-card">
+        <div class="s-card-title">SKAM Dimensions Average <span>Across reviewed portfolio</span></div>
+        <div id="skam-dim-bars"></div>
+      </div>
+      <div class="s-card">
+        <div class="s-card-title">Early Warning Signals</div>
+        <div id="port-warnings"></div>
+      </div>
+    </div>
+    <div class="s-card">
+      <div class="s-card-title">All Active Accounts — Scored View</div>
+      <div class="t-wrap" id="port-accounts-table"></div>
+    </div>
+    <div class="context-note" style="margin-top:16px">
+      <div class="context-note-label">✦ Portfolio Health Notes</div>
+      <textarea id="ctx-portfolio" placeholder="Key insights, trends to highlight, narrative for leadership…" oninput="saveCtx('portfolio',this.value)"></textarea>
+    </div>
+  </div>
+</div>
+
+<!-- ── COMMITMENTS ── -->
+<div id="page-commitments" class="page">
+  <div class="page-hdr">
+    <div class="page-hdr-left"><h1>Commitments Tracker</h1><p>What we said, what we did — the accountability engine</p></div>
+    <button class="btn btn-primary btn-sm" onclick="openAddCommitModal()">+ Add Commitment</button>
+  </div>
+  <div class="page-body">
+    <div class="kpi-grid stagger" style="grid-template-columns:repeat(4,1fr)" id="commit-stats"></div>
+    <div style="display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap">
+      <button class="btn btn-ghost btn-sm" onclick="setCommitFilter('all',this)" style="border-color:var(--gold);color:var(--gold)">All</button>
+      <button class="btn btn-ghost btn-sm" onclick="setCommitFilter('open',this)">Open</button>
+      <button class="btn btn-ghost btn-sm" onclick="setCommitFilter('done',this)">Closed</button>
+      <button class="btn btn-ghost btn-sm" onclick="setCommitFilter('overdue',this)">Overdue</button>
+    </div>
+    <div id="commit-list"></div>
+    <div class="context-note" style="margin-top:16px">
+      <div class="context-note-label">✦ Commitments Context</div>
+      <textarea id="ctx-commitments" placeholder="Patterns, blockers, accountability narrative…" oninput="saveCtx('commitments',this.value)"></textarea>
+    </div>
+  </div>
+</div>
+
+<!-- ── RISK REGISTER ── -->
+<div id="page-risk" class="page">
+  <div class="page-hdr">
+    <div class="page-hdr-left"><h1>Risk Register</h1><p>Revenue at risk, trigger analysis and intervention status</p></div>
+    <button class="btn btn-secondary btn-sm" onclick="fetchData().then(loadRisk)">↻ Refresh</button>
+  </div>
+  <div class="page-body">
+    <div id="risk-banner"></div>
+    <div class="grid-4" id="risk-triggers"></div>
+    <div class="s-card">
+      <div class="s-card-title">Risk Accounts — Full Detail <span>Click any row to set intervention status</span></div>
+      <div class="t-wrap" id="risk-table"></div>
+    </div>
+    <div class="grid-2">
+      <div class="s-card">
+        <div class="s-card-title">Churn Exposure</div>
+        <div class="chart-wrap"><canvas id="chart-risk-mrr"></canvas></div>
+      </div>
+      <div class="s-card">
+        <div class="s-card-title">Intervention Status Tracker</div>
+        <div id="intervention-tracker"></div>
+        <button class="btn btn-ghost btn-sm" onclick="openInterventionModal()" style="margin-top:12px;width:100%">+ Log Intervention</button>
+      </div>
+    </div>
+    <div class="context-note" style="margin-top:4px">
+      <div class="context-note-label">✦ Risk Narrative</div>
+      <textarea id="ctx-risk" placeholder="Key risk accounts to escalate, intervention plans, leadership asks…" oninput="saveCtx('risk',this.value)"></textarea>
+    </div>
+  </div>
+</div>
+
+<!-- ── GROWTH ENGINE ── -->
+<div id="page-growth" class="page">
+  <div class="page-hdr">
+    <div class="page-hdr-left"><h1>Growth Engine</h1><p>Pipeline quality, conversion velocity and expansion momentum</p></div>
+    <button class="btn btn-secondary btn-sm" onclick="fetchData().then(loadGrowth)">↻ Refresh</button>
+  </div>
+  <div class="page-body">
+    <div class="kpi-grid stagger" style="grid-template-columns:repeat(5,1fr)" id="growth-kpis"></div>
+    <div class="grid-2">
+      <div class="s-card">
+        <div class="s-card-title">Pipeline Stage Funnel</div>
+        <div id="pipeline-funnel"></div>
+      </div>
+      <div class="s-card">
+        <div class="s-card-title">Stage Distribution</div>
+        <div class="chart-wrap"><canvas id="chart-stage"></canvas></div>
+      </div>
+    </div>
+    <div class="s-card">
+      <div class="s-card-title">Pipeline Detail — All Active Opportunities <span>Stale deals (30d+) are highlighted</span></div>
+      <div class="t-wrap" id="growth-pipeline-table"></div>
+    </div>
+    <div class="grid-2">
+      <div class="s-card">
+        <div class="s-card-title">Conversion by Account Manager</div>
+        <div id="growth-am-conv"></div>
+      </div>
+      <div class="s-card">
+        <div class="s-card-title">Delay & Loss Reasons</div>
+        <div id="growth-reasons"></div>
+      </div>
+    </div>
+    <div class="context-note" style="margin-top:4px">
+      <div class="context-note-label">✦ Growth Narrative</div>
+      <textarea id="ctx-growth" placeholder="Pipeline quality assessment, conversion barriers, asks from leadership…" oninput="saveCtx('growth',this.value)"></textarea>
+    </div>
+  </div>
+</div>
+
+<!-- ── LEADING INDICATORS ── -->
+<div id="page-indicators" class="page">
+  <div class="page-hdr">
+    <div class="page-hdr-left"><h1>Leading Indicators</h1><p>Input metrics that predict next quarter's retention and growth</p></div>
+    <button class="btn btn-secondary btn-sm" onclick="fetchData().then(loadIndicators)">↻ Refresh</button>
+  </div>
+  <div class="page-body">
+    <div class="grid-4" id="indicator-kpis"></div>
+    <div class="grid-2">
+      <div class="s-card">
+        <div class="s-card-title">Review Compliance — Last 30 Days</div>
+        <div id="review-compliance"></div>
+      </div>
+      <div class="s-card">
+        <div class="s-card-title">MBR / QBR Health Matrix</div>
+        <div id="cadence-matrix"></div>
+      </div>
+    </div>
+    <div class="grid-2">
+      <div class="s-card">
+        <div class="s-card-title">SKAM Dimension Breakdown <span>Avg across portfolio</span></div>
+        <div id="dim-breakdown"></div>
+      </div>
+      <div class="s-card">
+        <div class="s-card-title">Demo Activity & Pipeline Seeding</div>
+        <div id="demo-activity"></div>
+      </div>
+    </div>
+    <div class="s-card">
+      <div class="s-card-title">Accounts with No Activity — 30 Days+ <span>At risk of disengagement</span></div>
+      <div id="no-activity-table"></div>
+    </div>
+    <div class="context-note" style="margin-top:16px">
+      <div class="context-note-label">✦ Indicators Narrative</div>
+      <textarea id="ctx-indicators" placeholder="What the leading indicators tell us about the next 90 days…" oninput="saveCtx('indicators',this.value)"></textarea>
+    </div>
+  </div>
+</div>
+
+<!-- ── BOTTLENECKS & ASKS ── -->
+<div id="page-bottlenecks" class="page">
+  <div class="page-hdr">
+    <div class="page-hdr-left"><h1>Bottlenecks & Asks</h1><p>What needs a decision, resource, or escalation from leadership</p></div>
+    <button class="btn btn-primary btn-sm" onclick="openAddBlockerModal()">+ Add Bottleneck</button>
+  </div>
+  <div class="page-body">
+    <div class="grid-3" id="blocker-stats"></div>
+    <div id="blocker-list"></div>
+    <div class="sep"></div>
+    <div class="s-card-title" style="margin-bottom:12px;font-family:'Syne',sans-serif;font-size:12px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--text-dim)">Resolved Bottlenecks</div>
+    <div id="blocker-resolved-list"></div>
+    <div class="context-note" style="margin-top:16px">
+      <div class="context-note-label">✦ Bottlenecks Narrative</div>
+      <textarea id="ctx-bottlenecks" placeholder="Frame the asks — what is needed, why, and the consequence of delay…" oninput="saveCtx('bottlenecks',this.value)"></textarea>
+    </div>
+  </div>
+</div>
+
+<!-- ── MOMENTUM ── -->
+<div id="page-momentum" class="page">
+  <div class="page-hdr">
+    <div class="page-hdr-left"><h1>Momentum</h1><p>Wins, highlights and signals that the machine is working</p></div>
+    <button class="btn btn-primary btn-sm" onclick="openAddWinModal()">+ Add Win</button>
+  </div>
+  <div class="page-body">
+    <div class="grid-4" id="momentum-kpis"></div>
+    <div id="win-list"></div>
+    <div class="context-note" style="margin-top:16px">
+      <div class="context-note-label">✦ Momentum Narrative</div>
+      <textarea id="ctx-momentum" placeholder="The energy and direction of the team — what's working and why…" oninput="saveCtx('momentum',this.value)"></textarea>
+    </div>
+  </div>
+</div>
+
+</div><!-- /main -->
+
+<!-- ══════════════════════════════════════════════ MODALS -->
+
+<!-- Session Modal -->
+<div class="modal-overlay" id="modal-session">
+  <div class="modal">
+    <h2>Session Settings</h2>
+    <div class="form-row">
+      <div class="field"><label>Session Number</label><input type="number" id="sess-num" placeholder="e.g. 4" min="1"></div>
+      <div class="field"><label>Session Date</label><input type="date" id="sess-date"></div>
+    </div>
+    <div class="field"><label>Next Session Date</label><input type="date" id="sess-next"></div>
+    <div class="field"><label>Attendees (comma-separated)</label><input type="text" id="sess-attendees" placeholder="Varun, Chitransh, Saurabh, Animesh"></div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('modal-session')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveSession()">Save Session →</button>
+    </div>
+  </div>
+</div>
+
+<!-- Add Commitment Modal -->
+<div class="modal-overlay" id="modal-commit">
+  <div class="modal">
+    <h2>Add Commitment</h2>
+    <div class="field"><label>Commitment *</label><textarea id="cm-text" placeholder="What was agreed — be specific about the outcome expected…"></textarea></div>
+    <div class="form-row">
+      <div class="field"><label>Owner *</label>
+        <select id="cm-owner">
+          <option value="">— Select —</option>
+          <option>Animesh (AVP)</option><option>Saurabh (VP)</option><option>Varun (COO)</option><option>Chitransh (CRO)</option>
+          <option>Vaishali Uniyal</option><option>Bhawana Malinda</option><option>Kanika Tandon</option><option>Hardeep Singh</option>
+          <option>Team FA</option><option>Client Side</option><option>Product Team</option>
+        </select>
+      </div>
+      <div class="field"><label>Due Date</label><input type="date" id="cm-due"></div>
+    </div>
+    <div class="form-row">
+      <div class="field"><label>Type</label>
+        <select id="cm-type">
+          <option value="Action">Action</option><option value="Decision">Decision Needed</option>
+          <option value="Follow-up">Follow-up</option><option value="Escalation">Escalation</option>
+        </select>
+      </div>
+      <div class="field"><label>Priority</label>
+        <select id="cm-priority">
+          <option value="High">High</option><option value="Medium">Medium</option><option value="Low">Low</option>
+        </select>
+      </div>
+    </div>
+    <div class="field"><label>Context / Background</label><input type="text" id="cm-context" placeholder="Why this was raised, what decision it requires…"></div>
+    <input type="hidden" id="cm-edit-id">
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('modal-commit')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveCommitment()">Save Commitment →</button>
+    </div>
+  </div>
+</div>
+
+<!-- Add Bottleneck Modal -->
+<div class="modal-overlay" id="modal-blocker">
+  <div class="modal">
+    <h2>Log Bottleneck / Ask</h2>
+    <div class="field"><label>Bottleneck *</label><textarea id="bl-title" placeholder="Describe the blocker or problem clearly…"></textarea></div>
+    <div class="form-row">
+      <div class="field"><label>Type of Ask</label>
+        <select id="bl-type">
+          <option value="Decision">Decision Needed</option><option value="Resource">Resource Required</option>
+          <option value="Escalation">Escalation</option><option value="Process">Process Change</option>
+        </select>
+      </div>
+      <div class="field"><label>Impact Area</label>
+        <select id="bl-impact-area">
+          <option value="Revenue">Revenue</option><option value="Retention">Retention</option>
+          <option value="Velocity">Velocity</option><option value="Quality">Quality</option><option value="Team">Team</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="field"><label>Impact Level</label>
+        <select id="bl-impact">
+          <option value="High">🔴 High</option><option value="Medium">🟡 Medium</option><option value="Low">⚪ Low</option>
+        </select>
+      </div>
+      <div class="field"><label>Owner / Escalate To</label><input type="text" id="bl-owner" placeholder="Who needs to act…"></div>
+    </div>
+    <div class="field"><label>The Ask — What Specifically is Needed</label><textarea id="bl-ask" placeholder="Be precise: a decision, a resource, a conversation, a timeline…"></textarea></div>
+    <div class="field"><label>Revenue / Retention Impact</label><input type="text" id="bl-impact-val" placeholder="e.g. ₹50K MRR at risk, 2 deals stalled, 30-day delay…"></div>
+    <input type="hidden" id="bl-edit-id">
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('modal-blocker')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveBlocker()">Log Bottleneck →</button>
+    </div>
+  </div>
+</div>
+
+<!-- Add Win Modal -->
+<div class="modal-overlay" id="modal-win">
+  <div class="modal">
+    <h2>Log a Win</h2>
+    <div class="field"><label>Win / Highlight *</label><textarea id="wn-title" placeholder="What happened, and why it matters…"></textarea></div>
+    <div class="form-row">
+      <div class="field"><label>Type</label>
+        <select id="wn-type">
+          <option value="Retention">Retention</option><option value="Expansion">Expansion</option>
+          <option value="Process">Process Improvement</option><option value="Relationship">Relationship</option><option value="Team">Team</option>
+        </select>
+      </div>
+      <div class="field"><label>Account (optional)</label><input type="text" id="wn-account" placeholder="Which account, if applicable…"></div>
+    </div>
+    <div class="field"><label>Impact / Value</label><input type="text" id="wn-impact" placeholder="₹ value, time saved, risk averted, NPS gained…"></div>
+    <div class="field"><label>Credit To</label><input type="text" id="wn-credit" placeholder="Team member(s) who drove this…"></div>
+    <input type="hidden" id="wn-edit-id">
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('modal-win')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveWin()">Log Win →</button>
+    </div>
+  </div>
+</div>
+
+<!-- Intervention Modal -->
+<div class="modal-overlay" id="modal-intervention">
+  <div class="modal">
+    <h2>Log Intervention</h2>
+    <div class="field"><label>Account *</label><input type="text" id="iv-account" placeholder="Account name…"></div>
+    <div class="form-row">
+      <div class="field"><label>Status</label>
+        <select id="iv-status">
+          <option value="Planned">Planned</option><option value="In Progress">In Progress</option>
+          <option value="Escalated">Escalated to Leadership</option><option value="Resolved">Resolved</option>
+        </select>
+      </div>
+      <div class="field"><label>Owner</label><input type="text" id="iv-owner" placeholder="Who is leading intervention…"></div>
+    </div>
+    <div class="field"><label>Intervention Plan</label><textarea id="iv-plan" placeholder="What actions are being taken…"></textarea></div>
+    <div class="field"><label>Target Date</label><input type="date" id="iv-date"></div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('modal-intervention')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveIntervention()">Save →</button>
+    </div>
+  </div>
+</div>
+
+<!-- Risk Drilldown Modal -->
+<div class="modal-overlay" id="modal-risk-drill">
+  <div class="modal" style="width:680px">
+    <h2 id="risk-drill-title">Account Risk Detail</h2>
+    <div id="risk-drill-content"></div>
+    <div class="modal-footer"><button class="btn btn-secondary" onclick="closeModal('modal-risk-drill')">Close</button></div>
+  </div>
+</div>
+
+<!-- AI Brief Modal -->
+<div class="modal-overlay" id="modal-brief">
+  <div class="modal" style="width:700px">
+    <h2>✦ AI Pre-Read Brief — Ready to Paste</h2>
+    <div style="font-size:13px;color:var(--text-mid);margin-bottom:16px;line-height:1.6">Copy the prompt below and paste it into <strong style="color:var(--gold)">Claude.ai</strong>. You'll get a 4-paragraph executive narrative in under 60 seconds.</div>
+    <div style="background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:10px;padding:16px;max-height:400px;overflow-y:auto">
+      <pre id="brief-prompt" style="font-family:'DM Mono',monospace;font-size:11px;color:var(--text-mid);white-space:pre-wrap;line-height:1.7"></pre>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('modal-brief')">Close</button>
+      <button class="btn btn-primary" onclick="copyBrief()">📋 Copy Prompt</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"><span id="toast-icon">✓</span><span id="toast-msg">Saved</span></div>
+
+<script>
+// ══════════════════════════════════════════════════════════
+// CONSTANTS & STATE
+// ══════════════════════════════════════════════════════════
+const SCRIPT_URL='https://script.google.com/macros/s/AKfycby6dGWJRVBifytPPLJfAAAb77f3xehN5Ps0a1sk6xwxARapncXxUuJQAiAXc5IUuyzP/exec';
+const CSM_LIST=['Vaishali Uniyal','Bhawana Malinda','Kanika Tandon','Hardeep Singh'];
+const AM_LIST=['Swapnil Nawani','Vinay Kumar','Shivangi Nagarkoti','Khushi Mahajan','Abhishek Singh Jadaon','Hamza','Vaishali Mishra','Rushikesh','Suvarna','Manik Bedi','Vatsal Khosla','Upasana Negi','Tushar Rochlani','Charit Chopra'];
+const DEFAULT_ATTENDEES=['Animesh (AVP)','Saurabh (VP)','Varun (COO)','Chitransh (CRO)'];
+
+let D = {}; // centralData
+let S = {}; // localStorage state
+let charts = {};
+let commitFilter = 'all';
+
+const EMPTY_STATE = {
+  session:{num:1,date:new Date().toISOString().split('T')[0],next:'',attendees:DEFAULT_ATTENDEES},
+  commitments:[],
+  blockers:[],
+  wins:[],
+  interventions:[],
+  contextNotes:{},
+};
+
+// ══════════════════════════════════════════════════════════
+// INIT & STORAGE
+// ══════════════════════════════════════════════════════════
+window.onload = async () => {
+  Chart.defaults.color = '#7A95B5';
+  Chart.defaults.borderColor = 'rgba(255,255,255,0.06)';
+  loadS();
+  populateAttendees();
+  updateSessionUI();
+  await fetchData();
+  showPage('hub');
+};
+
+function loadS(){
+  try{S=JSON.parse(localStorage.getItem('fa_steerco_v1')||'null')||JSON.parse(JSON.stringify(EMPTY_STATE));}
+  catch(e){S=JSON.parse(JSON.stringify(EMPTY_STATE));}
+  // restore context notes to textareas
+  setTimeout(()=>{
+    Object.keys(S.contextNotes||{}).forEach(k=>{
+      const el=document.getElementById('ctx-'+k);
+      if(el)el.value=S.contextNotes[k]||'';
+    });
+  },100);
+}
+function saveS(){localStorage.setItem('fa_steerco_v1',JSON.stringify(S));}
+function saveCtx(key,val){if(!S.contextNotes)S.contextNotes={};S.contextNotes[key]=val;saveS();}
+
+// ══════════════════════════════════════════════════════════
+// FETCH DATA
+// ══════════════════════════════════════════════════════════
+async function fetchData(){
+  setSyncStatus('syncing','⊙ Syncing…');
+  try{
+    const r=await fetch(SCRIPT_URL+'?type=all');
+    const j=await r.json();
+    if(j.success&&j.data){D=j.data;}
+    setSyncStatus('ok','Connected');
+    document.getElementById('last-sync').textContent='Last sync: '+new Date().toLocaleTimeString('en-IN');
+    refreshCurrentPage();
+  }catch(e){setSyncStatus('err','Sync error');}
+}
+function setSyncStatus(state,msg){
+  const dot=document.getElementById('sync-dot');
+  const lbl=document.getElementById('sync-label');
+  dot.style.background=state==='ok'?'var(--teal)':state==='syncing'?'var(--amber)':'var(--red)';
+  lbl.textContent=msg;
+}
+function refreshCurrentPage(){
+  const ap=document.querySelector('.page.active');
+  if(!ap)return;
+  const id=ap.id.replace('page-','');
+  loadPage(id);
+}
+
+// ══════════════════════════════════════════════════════════
+// NAVIGATION
+// ══════════════════════════════════════════════════════════
+function showPage(id,el){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  const page=document.getElementById('page-'+id);
+  if(page)page.classList.add('active');
+  if(el)el.classList.add('active');
+  else{document.querySelectorAll('.nav-item').forEach(n=>{if(n.getAttribute('onclick')&&n.getAttribute('onclick').includes("'"+id+"'"))n.classList.add('active');});}
+  loadPage(id);
+}
+function loadPage(id){
+  if(id==='hub')loadHub();
+  else if(id==='portfolio')loadPortfolio();
+  else if(id==='commitments')loadCommitments();
+  else if(id==='risk')loadRisk();
+  else if(id==='growth')loadGrowth();
+  else if(id==='indicators')loadIndicators();
+  else if(id==='bottlenecks')loadBottlenecks();
+  else if(id==='momentum')loadMomentum();
+}
+
+// ══════════════════════════════════════════════════════════
+// SESSION
+// ══════════════════════════════════════════════════════════
+function updateSessionUI(){
+  const ss=S.session||{};
+  document.getElementById('sb-num').textContent=ss.num||'1';
+  document.getElementById('sb-date').textContent=ss.date?formatDate(ss.date):'Today';
+  const subtitle=document.getElementById('hub-subtitle');
+  if(subtitle&&ss.next)subtitle.textContent='Next session: '+formatDate(ss.next)+' · Attendees: '+(ss.attendees||[]).join(', ');
+}
+function openSessionModal(){
+  const ss=S.session||{};
+  document.getElementById('sess-num').value=ss.num||1;
+  document.getElementById('sess-date').value=ss.date||new Date().toISOString().split('T')[0];
+  document.getElementById('sess-next').value=ss.next||'';
+  document.getElementById('sess-attendees').value=(ss.attendees||DEFAULT_ATTENDEES).join(', ');
+  openModal('modal-session');
+}
+function saveSession(){
+  S.session={
+    num:parseInt(document.getElementById('sess-num').value)||1,
+    date:document.getElementById('sess-date').value,
+    next:document.getElementById('sess-next').value,
+    attendees:document.getElementById('sess-attendees').value.split(',').map(s=>s.trim()).filter(Boolean),
+  };
+  saveS();
+  updateSessionUI();
+  populateAttendees();
+  closeModal('modal-session');
+  toast('Session updated');
+}
+function populateAttendees(){
+  const el=document.getElementById('attendee-chips');
+  if(!el)return;
+  const list=(S.session?.attendees||DEFAULT_ATTENDEES);
+  el.innerHTML=list.map(a=>`<span class="attendee-chip present">${a}</span>`).join('');
+}
+
+// ══════════════════════════════════════════════════════════
+// UTILS
+// ══════════════════════════════════════════════════════════
+function getLatestSkam(ops){const l={};(ops||[]).forEach(o=>{const a=o['Account Name']||o.account,d=o['Review Date']||o.reviewDate||'';if(!l[a]||d>l[a]['Review Date'])l[a]=o;});return l;}
+function fmtMrr(v){if(!v)return'₹0';return'₹'+(v/1000).toFixed(0)+'K';}
+function fmtMrrFull(v){return'₹'+(Number(v)||0).toLocaleString('en-IN');}
+function daysSince(ts){if(!ts)return 9999;const d=new Date(ts);if(isNaN(d))return 9999;return Math.floor((Date.now()-d.getTime())/(86400000));}
+function monthKey(ts){const d=new Date(ts);if(isNaN(d))return null;return`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;}
+function formatDate(d){if(!d)return'—';return new Date(d+'T12:00:00').toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'});}
+function calcNRR(acc,churned,pip){
+  const activeMrr=acc.reduce((s,a)=>s+(Number(a['Current MRR (₹)'])||0),0);
+  const churnMrr=churned.reduce((s,a)=>s+(Number(a['Current MRR (₹)'])||0),0);
+  const expansionMrr=(pip||[]).filter(p=>(p['Opportunity Stage']||p.stage)==='Closed Won'&&(p['MRR Updated']||p.mrrUpdated)==='Yes').reduce((s,p)=>s+(Number(p['Potential MRR (₹)'])||0),0);
+  const start=activeMrr+churnMrr-expansionMrr;
+  const nrr=start>0?Math.round((activeMrr/start)*100):null;
+  return{nrr,activeMrr,churnMrr,expansionMrr,start};
+}
+function buildSkamTrend(ops){
+  const byM={};(ops||[]).forEach(o=>{const mk=monthKey(o['Review Date']||o.reviewDate||o['Timestamp']||'');if(!mk)return;if(!byM[mk])byM[mk]=[];byM[mk].push(Number(o['SKAM Score']||o.skamScore)||0);});
+  const months=Object.keys(byM).sort().slice(-6);
+  return{labels:months.map(m=>{const[y,mo]=m.split('-');return['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][parseInt(mo)-1]+'''+y.slice(2);}),data:months.map(m=>Math.round(byM[m].reduce((a,b)=>a+b)/byM[m].length))};
+}
+function destroyChart(k){if(charts[k]){charts[k].destroy();delete charts[k];}}
+
+function animateCounter(el,target,suffix,prefix){
+  if(!el)return;
+  const start=0,dur=700,startTime=performance.now();
+  const isFloat=String(target).includes('.');
+  function step(ts){
+    const p=Math.min((ts-startTime)/dur,1);
+    const ease=1-Math.pow(1-p,3);
+    const val=start+(target-start)*ease;
+    el.textContent=(prefix||'')+(isFloat?val.toFixed(1):Math.round(val))+(suffix||'');
+    if(p<1)requestAnimationFrame(step);
+    else el.textContent=(prefix||'')+target+(suffix||'');
+  }
+  requestAnimationFrame(step);
+}
+function getEarlyWarnings(ops){
+  const warnings=[];
+  const grouped={};
+  (ops||[]).forEach(o=>{const a=o['Account Name']||'';if(!grouped[a])grouped[a]=[];grouped[a].push(o);});
+  Object.keys(grouped).forEach(acc=>{
+    const sorted=grouped[acc].sort((a,b)=>(b['Review Date']||'').localeCompare(a['Review Date']||''));
+    const latest=sorted[0],prev=sorted[1];
+    const ls=Number(latest['SKAM Score']||0);
+    const risk=(latest['Risk Flag']||latest.riskFlag)==='Yes';
+    if(risk)return;
+    if(prev){const ps=Number(prev['SKAM Score']||0);if(ls<ps-10)warnings.push({acc,reason:`SKAM dropped ${ps}→${ls}`,type:'decline'});}
+    const lm=latest['Last Meeting Date']||latest.lastMeeting;
+    if(lm&&daysSince(lm)>30&&ls>=50)warnings.push({acc,reason:`No meeting for ${daysSince(lm)} days`,type:'stale'});
+  });
+  return warnings.slice(0,6);
+}
+
+// ══════════════════════════════════════════════════════════
+// HUB PAGE
+// ══════════════════════════════════════════════════════════
+function loadHub(){
+  const acc=D.accounts||[];
+  const ops=D.operational||[];
+  const pip=D.pipeline||[];
+  const active=acc.filter(a=>(a['Account Status']||'Active')!=='Churned');
+  const churned=acc.filter(a=>(a['Account Status']||'')===  'Churned');
+  const ls=getLatestSkam(ops);
+  const riskOps=Object.values(ls).filter(o=>(o['Risk Flag']||o.riskFlag)==='Yes');
+  const openPip=pip.filter(p=>!['Closed Won','Closed Lost'].includes(p['Opportunity Stage']||p.stage));
+  const {nrr}=calcNRR(active,churned,pip);
+  const riskMrr=active.filter(a=>riskOps.find(o=>(o['Account Name']||o.account)===(a['Company Name']||a.company))).reduce((s,a)=>s+(Number(a['Current MRR (₹)'])||0),0);
+  const pipMrr=openPip.reduce((s,p)=>s+(Number(p['Potential MRR (₹)'])||0),0);
+  const scArr=Object.values(ls).map(o=>Number(o['SKAM Score']||o.skamScore)).filter(Boolean);
+  const avgSkam=scArr.length?Math.round(scArr.reduce((a,b)=>a+b)/scArr.length):0;
+  // Commitments rate
+  const totalC=S.commitments?.length||0;
+  const doneC=S.commitments?.filter(c=>c.status==='done').length||0;
+  const commitRate=totalC>0?Math.round(doneC/totalC*100):100;
+
+  // Animate KPIs
+  setTimeout(()=>{
+    animateCounter(document.getElementById('h-nrr'),nrr||0,'%');
+    document.getElementById('h-nrr').style.color=!nrr?'var(--text-mid)':nrr>=100?'var(--teal)':nrr>=90?'var(--amber)':'var(--red)';
+    document.getElementById('h-risk-sub').textContent=riskOps.length+' account'+(riskOps.length!==1?'s':'')+' flagged';
+    animateCounter(document.getElementById('h-pipeline'),Math.round(pipMrr/1000),'K','₹');
+    document.getElementById('h-pipeline-sub').textContent=openPip.length+' open opportunities';
+    animateCounter(document.getElementById('h-skam'),avgSkam);
+    animateCounter(document.getElementById('h-commit'),commitRate,'%');
+    document.getElementById('h-commit-sub').textContent=doneC+' of '+totalC+' closed';
+  },100);
+
+  // Risk MRR formatted
+  document.getElementById('h-risk-mrr').textContent=fmtMrr(riskMrr);
+
+  // Health matrix
+  const now=new Date();
+  const d30=new Date(now-30*86400000);
+  const reviewed30=Object.values(ls).filter(o=>new Date(o['Review Date']||'')>=d30).length;
+  const reviewPct=active.length?Math.round(reviewed30/active.length*100):0;
+  const highGrowth=Object.values(ls).filter(o=>(o['Growth Flag']||o.growthFlag)==='High').length;
+  const onTrackPip=openPip.filter(p=>daysSince(p['Timestamp']||'')<30).length;
+  const pipAgeScore=openPip.length?Math.round(onTrackPip/openPip.length*100):100;
+
+  const dims=[
+    {label:'Account Review Rate (30d)',val:reviewPct,color:'var(--teal)'},
+    {label:'Risk-Free Accounts',val:active.length?Math.round((active.length-riskOps.length)/active.length*100):100,color:'var(--blue)'},
+    {label:'Pipeline Freshness',val:pipAgeScore,color:'var(--gold)'},
+    {label:'SKAM Health (≥70)',val:scArr.length?Math.round(scArr.filter(s=>s>=70).length/scArr.length*100):0,color:'var(--teal)'},
+    {label:'Growth Potential (High+Mid)',val:Object.values(ls).length?Math.round((highGrowth+Object.values(ls).filter(o=>(o['Growth Flag']||o.growthFlag)==='Medium').length)/Object.values(ls).length*100):0,color:'var(--purple)'},
+  ];
+  document.getElementById('health-matrix').innerHTML=dims.map(d=>`
+    <div class="health-bar-row">
+      <div class="health-bar-label">${d.label}</div>
+      <div class="health-bar-track"><div class="health-bar-fill" style="width:${d.val}%;background:${d.color}"></div></div>
+      <div class="health-bar-val" style="color:${d.color}">${d.val}%</div>
+    </div>`).join('');
+
+  // SKAM Trend chart
+  const trend=buildSkamTrend(ops);
+  destroyChart('hub-skam');
+  if(trend.labels.length>=2){
+    const c=document.getElementById('chart-hub-skam');
+    charts['hub-skam']=new Chart(c,{type:'line',data:{labels:trend.labels,datasets:[{label:'Avg SKAM',data:trend.data,borderColor:'var(--gold)',backgroundColor:'rgba(232,168,56,0.08)',tension:.4,fill:true,pointRadius:4,pointBackgroundColor:'var(--gold)'}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{min:0,max:100,grid:{color:'rgba(255,255,255,0.04)'},ticks:{font:{size:10}}},x:{grid:{display:false},ticks:{font:{size:10}}}}}});
+  }
+
+  // Early warnings
+  const warnings=getEarlyWarnings(ops);
+  const wEl=document.getElementById('hub-early-warnings');
+  if(warnings.length){
+    wEl.innerHTML=`<div style="margin-top:14px"><div style="font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--amber);margin-bottom:10px">⚡ Early Warning Signals</div>`+
+    warnings.map(w=>`<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border)"><span style="font-size:13px">${w.type==='decline'?'📉':'🕐'}</span><div style="flex:1"><div style="font-size:12px;font-weight:600;color:var(--text)">${w.acc}</div><div style="font-size:11px;color:var(--text-mid)">${w.reason}</div></div><span class="badge bg-amber" style="font-size:9px">${w.type==='decline'?'Declining':'Stale'}</span></div>`).join('')+'</div>';
+  } else {wEl.innerHTML='';}
+
+  // Momentum snapshot
+  const mEl=document.getElementById('hub-momentum');
+  const wins=(S.wins||[]).slice(0,4);
+  if(wins.length){
+    const typeColors={Retention:'teal',Expansion:'gold',Process:'blue',Relationship:'purple',Team:'amber'};
+    mEl.innerHTML=wins.map(w=>`<div style="padding:10px 0;border-bottom:1px solid var(--border);last-child:none"><div style="display:flex;align-items:flex-start;gap:8px"><span class="badge bg-${typeColors[w.type]||'dim'}" style="margin-top:1px;flex-shrink:0">${w.type}</span><div><div style="font-size:12px;color:var(--text);line-height:1.5">${w.title}</div>${w.impact?`<div style="font-size:11px;color:var(--text-mid);margin-top:3px">${w.impact}</div>`:''}</div></div></div>`).join('');
+  } else {
+    mEl.innerHTML='<div class="empty"><div class="empty-icon">★</div><p>Log wins to see momentum here</p></div>';
+  }
+
+  // Update badge
+  updateBadges();
+}
+
+// ══════════════════════════════════════════════════════════
+// PORTFOLIO HEALTH
+// ══════════════════════════════════════════════════════════
+function loadPortfolio(){
+  const acc=D.accounts||[];
+  const ops=D.operational||[];
+  const pip=D.pipeline||[];
+  const active=acc.filter(a=>(a['Account Status']||'Active')!=='Churned');
+  const churned=acc.filter(a=>(a['Account Status']||'')===  'Churned');
+  const ls=getLatestSkam(ops);
+  const {nrr,activeMrr,churnMrr,expansionMrr,start}=calcNRR(active,churned,pip);
+  const wonMrr=(pip||[]).filter(p=>(p['Opportunity Stage']||p.stage)==='Closed Won').reduce((s,p)=>s+(Number(p['Potential MRR (₹)'])||0),0);
+
+  // NRR Hero
+  const nrrColor=!nrr?'var(--text-dim)':nrr>=100?'var(--teal)':nrr>=90?'var(--amber)':'var(--red)';
+  document.getElementById('nrr-hero').innerHTML=`
+    <div class="nrr-hero">
+      <div class="nrr-main">
+        <div class="nrr-main-label">Net Revenue Retention</div>
+        <div class="nrr-main-val" style="color:${nrrColor}">${nrr!==null?nrr+'%':'—'}</div>
+        <div style="font-size:11px;color:var(--text-dim);margin-top:8px">${nrr===null?'Need more data':nrr>=100?'▲ Expanding — growth exceeds churn':nrr>=90?'→ Stable — monitor expansion':'▼ Action needed — churn exceeding expansion'}</div>
+      </div>
+      <div class="nrr-divider"></div>
+      <div><div class="nrr-stat-label">Starting MRR</div><div class="nrr-stat-val">${fmtMrr(start)}</div></div>
+      <div><div class="nrr-stat-label">+ Expansion Won</div><div class="nrr-stat-val" style="color:var(--teal)">+${fmtMrr(expansionMrr)}</div></div>
+      <div><div class="nrr-stat-label">− Churn MRR</div><div class="nrr-stat-val" style="color:var(--red)">-${fmtMrr(churnMrr)}</div></div>
+      <div><div class="nrr-stat-label">Net Active MRR</div><div class="nrr-stat-val" style="color:${nrrColor}">${fmtMrr(activeMrr)}</div></div>
+    </div>`;
+
+  // SKAM trend
+  const trend=buildSkamTrend(ops);
+  destroyChart('port-skam');
+  if(trend.labels.length>=2){
+    const c=document.getElementById('chart-port-skam');
+    charts['port-skam']=new Chart(c,{type:'line',data:{labels:trend.labels,datasets:[{label:'Avg SKAM',data:trend.data,borderColor:'var(--gold)',backgroundColor:'rgba(232,168,56,0.08)',tension:.4,fill:true,pointRadius:5,pointBackgroundColor:'var(--gold)',borderWidth:2},{label:'Target (70)',data:trend.labels.map(()=>70),borderColor:'rgba(0,201,167,0.3)',borderDash:[5,5],pointRadius:0,fill:false,borderWidth:1}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'top',labels:{font:{size:10},boxWidth:10}}},scales:{y:{min:40,max:100,grid:{color:'rgba(255,255,255,0.04)'}},x:{grid:{display:false}}}}});
+  }
+
+  // Health distribution donut
+  const skamVals=Object.values(ls).map(o=>Number(o['SKAM Score']||o.skamScore)||0).filter(Boolean);
+  const greenA=skamVals.filter(s=>s>=70).length;
+  const amberA=skamVals.filter(s=>s>=50&&s<70).length;
+  const redA=skamVals.filter(s=>s<50).length;
+  destroyChart('health-dist');
+  if(skamVals.length){
+    charts['health-dist']=new Chart(document.getElementById('chart-health-dist'),{type:'doughnut',data:{labels:['Healthy (70+)','Watch (50-69)','Risk (<50)'],datasets:[{data:[greenA,amberA,redA],backgroundColor:['rgba(0,201,167,0.8)','rgba(255,184,48,0.8)','rgba(255,71,87,0.8)'],borderWidth:2,borderColor:'var(--card)'}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},cutout:'65%'}});
+    document.getElementById('health-dist-legend').innerHTML=`<span style="color:var(--teal)">● Healthy ${greenA}</span><span style="color:var(--amber)">● Watch ${amberA}</span><span style="color:var(--red)">● Risk ${redA}</span>`;
+  }
+
+  // SKAM dimension averages
+  const dims={rc:[],sd:[],cp:[],vp:[],es:[]};
+  (ops||[]).forEach(o=>{
+    dims.rc.push(Number(o['Relationship Coverage']||o.rc)||0);
+    dims.sd.push(Number(o['Solution Depth']||o.sd)||0);
+    dims.cp.push(Number(o['Competitive Positioning']||o.cp)||0);
+    dims.vp.push(Number(o['Value Perception']||o.vp)||0);
+    dims.es.push(Number(o['Executive Sponsorship']||o.es)||0);
+  });
+  const avg=arr=>arr.length?parseFloat((arr.reduce((a,b)=>a+b)/arr.length).toFixed(1)):0;
+  const dimData=[
+    {label:'Relationship Coverage',val:avg(dims.rc),color:'var(--blue)',max:5},
+    {label:'Solution Depth',val:avg(dims.sd),color:'var(--gold)',max:5},
+    {label:'Competitive Positioning',val:avg(dims.cp),color:'var(--red)',max:5,invert:true},
+    {label:'Value Perception',val:avg(dims.vp),color:'var(--teal)',max:5},
+    {label:'Executive Sponsorship',val:avg(dims.es),color:'var(--purple)',max:5},
+  ];
+  document.getElementById('skam-dim-bars').innerHTML=dimData.map(d=>{
+    const pct=d.val/d.max*100;
+    return`<div class="health-bar-row">
+      <div class="health-bar-label" style="width:170px">${d.label}</div>
+      <div class="health-bar-track"><div class="health-bar-fill" style="width:${pct}%;background:${d.color}"></div></div>
+      <div class="health-bar-val" style="color:${d.color}">${d.val}</div>
+      ${d.invert?`<span style="font-size:9px;color:var(--text-dim);margin-left:4px">(lower=better)</span>`:''}
+    </div>`;}).join('');
+
+  // Early warnings
+  const warns=getEarlyWarnings(ops);
+  const wEl=document.getElementById('port-warnings');
+  if(warns.length){
+    wEl.innerHTML=warns.map(w=>`<div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border)"><span style="font-size:14px">${w.type==='decline'?'📉':'🕐'}</span><div style="flex:1"><div style="font-size:12px;font-weight:600;color:var(--text)">${w.acc}</div><div style="font-size:11px;color:var(--text-mid)">${w.reason}</div></div><span class="badge bg-amber" style="font-size:9px">${w.type==='decline'?'Declining':'Inactive'}</span></div>`).join('');
+  } else {
+    wEl.innerHTML='<div class="empty" style="padding:24px"><div class="empty-icon" style="font-size:24px">✅</div><p>No early warnings detected</p></div>';
+  }
+
+  // Accounts table
+  const allScored=Object.entries(ls).map(([n,o])=>{
+    const accData=active.find(a=>(a['Company Name']||a.company)===n);
+    return{name:n,score:Number(o['SKAM Score']||o.skamScore)||0,growth:o['Growth Flag']||o.growthFlag||'—',risk:(o['Risk Flag']||o.riskFlag)==='Yes',mrr:accData?Number(accData['Current MRR (₹)']||0):0,csm:accData?accData['CSM']||'—':'—',am:accData?accData['Account Manager']||'—':'—',reviewDate:o['Review Date']||'—'};
+  }).sort((a,b)=>a.score-b.score);
+
+  const tableEl=document.getElementById('port-accounts-table');
+  tableEl.innerHTML=allScored.length?`<table><thead><tr><th>Account</th><th>SKAM</th><th>Growth</th><th>Risk</th><th>MRR</th><th>CSM</th><th>Last Review</th></tr></thead><tbody>${allScored.map(a=>`<tr><td><strong>${a.name}</strong></td><td><span style="font-family:'Syne',sans-serif;font-size:14px;font-weight:800;color:${a.score>=70?'var(--teal)':a.score>=50?'var(--amber)':'var(--red)'}">${a.score}</span></td><td><span class="badge bg-${a.growth==='High'?'teal':a.growth==='Medium'?'amber':'red'}">${a.growth}</span></td><td>${a.risk?'<span class="badge bg-red">⚠ Risk</span>':'<span class="badge bg-dim">Clear</span>'}</td><td>${fmtMrrFull(a.mrr)}</td><td>${a.csm}</td><td style="font-size:11px">${a.reviewDate}</td></tr>`).join('')}</tbody></table>`:'<div class="empty"><p>No scored accounts yet</p></div>';
+}
+
+// ══════════════════════════════════════════════════════════
+// COMMITMENTS TRACKER
+// ══════════════════════════════════════════════════════════
+function loadCommitments(){
+  const all=S.commitments||[];
+  const open=all.filter(c=>c.status!=='done');
+  const done=all.filter(c=>c.status==='done');
+  const overdue=open.filter(c=>c.due&&new Date(c.due)<new Date());
+  // Stats
+  document.getElementById('commit-stats').innerHTML=[
+    {label:'Total',val:all.length,color:'blue',icon:'#'},
+    {label:'Closed',val:done.length,color:'teal',icon:'✓'},
+    {label:'Open',val:open.length,color:'amber',icon:'○'},
+    {label:'Overdue',val:overdue.length,color:'red',icon:'⚠'},
+  ].map(s=>`<div class="kpi-card ${s.color}"><div class="kpi-label">${s.label}</div><div class="kpi-value ${s.color}" style="font-size:36px">${s.val}</div><div class="kpi-trend">${s.icon}</div></div>`).join('');
+  renderCommitList();
+  updateBadges();
+}
+
+function setCommitFilter(f,el){
+  commitFilter=f;
+  document.querySelectorAll('#page-commitments .btn-ghost').forEach(b=>{b.style.borderColor='';b.style.color='';});
+  if(el){el.style.borderColor='var(--gold)';el.style.color='var(--gold)';}
+  renderCommitList();
+}
+
+function renderCommitList(){
+  const all=S.commitments||[];
+  let list=all;
+  if(commitFilter==='open')list=all.filter(c=>c.status!=='done');
+  if(commitFilter==='done')list=all.filter(c=>c.status==='done');
+  if(commitFilter==='overdue')list=all.filter(c=>c.status!=='done'&&c.due&&new Date(c.due)<new Date());
+  list=list.sort((a,b)=>{if(a.status==='done'&&b.status!=='done')return 1;if(b.status==='done'&&a.status!=='done')return -1;return(a.due||'9999').localeCompare(b.due||'9999');});
+
+  const el=document.getElementById('commit-list');
+  if(!list.length){el.innerHTML='<div class="empty"><div class="empty-icon">✓</div><p>No commitments here</p></div>';return;}
+  const typeClass={Action:'bg-blue',Decision:'bg-purple','Follow-up':'bg-amber',Escalation:'bg-red'};
+  const prioClass={High:'bg-red',Medium:'bg-amber',Low:'bg-dim'};
+  const isOverdue=c=>c.status!=='done'&&c.due&&new Date(c.due)<new Date();
+  el.innerHTML=list.map(c=>`
+    <div class="commit-card ${c.status==='done'?'closed':''}" id="cc-${c.id}">
+      <div class="commit-header">
+        <span class="commit-num">#${c.id}</span>
+        <div class="commit-text">${c.text}</div>
+        ${c.status!=='done'?`<button class="btn btn-teal btn-sm" onclick="closeCommitment('${c.id}')">✓ Close</button>`:'<span class="badge bg-teal" style="flex-shrink:0">✓ Done</span>'}
+      </div>
+      ${c.context?`<div style="font-size:11px;color:var(--text-dim);margin:0 0 8px 34px;font-style:italic">${c.context}</div>`:''}
+      <div class="commit-meta" style="margin-left:34px">
+        <span class="badge ${typeClass[c.type]||'bg-dim'}">${c.type||'Action'}</span>
+        <span class="badge ${prioClass[c.priority]||'bg-dim'}">${c.priority||'Medium'}</span>
+        ${c.owner?`<span style="font-size:11px;color:var(--text-dim)">👤 ${c.owner}</span>`:''}
+        ${c.due?`<span style="font-size:11px;color:${isOverdue(c)?'var(--red)':'var(--text-dim)'}">📅 ${formatDate(c.due)}${isOverdue(c)?' ⚠ Overdue':''}</span>`:''}
+        <button class="btn-ghost btn-sm" style="padding:2px 8px;font-size:10px" onclick="editCommitment('${c.id}')">Edit</button>
+        <button class="btn btn-danger btn-sm" style="padding:2px 8px;font-size:10px" onclick="deleteCommitment('${c.id}')">✕</button>
+      </div>
+    </div>`).join('');
+}
+
+function openAddCommitModal(){
+  document.getElementById('cm-text').value='';
+  document.getElementById('cm-owner').value='';
+  document.getElementById('cm-due').value='';
+  document.getElementById('cm-type').value='Action';
+  document.getElementById('cm-priority').value='High';
+  document.getElementById('cm-context').value='';
+  document.getElementById('cm-edit-id').value='';
+  openModal('modal-commit');
+}
+function editCommitment(id){
+  const c=S.commitments.find(x=>x.id===id);
+  if(!c)return;
+  document.getElementById('cm-text').value=c.text||'';
+  document.getElementById('cm-owner').value=c.owner||'';
+  document.getElementById('cm-due').value=c.due||'';
+  document.getElementById('cm-type').value=c.type||'Action';
+  document.getElementById('cm-priority').value=c.priority||'High';
+  document.getElementById('cm-context').value=c.context||'';
+  document.getElementById('cm-edit-id').value=id;
+  openModal('modal-commit');
+}
+function saveCommitment(){
+  const text=document.getElementById('cm-text').value.trim();
+  if(!text){toast('Please enter commitment text','⚠');return;}
+  const editId=document.getElementById('cm-edit-id').value;
+  const c={id:editId||Date.now().toString(36),text,owner:document.getElementById('cm-owner').value,due:document.getElementById('cm-due').value,type:document.getElementById('cm-type').value,priority:document.getElementById('cm-priority').value,context:document.getElementById('cm-context').value,status:editId?(S.commitments.find(x=>x.id===editId)?.status||'open'):'open',createdAt:editId?(S.commitments.find(x=>x.id===editId)?.createdAt||new Date().toISOString()):new Date().toISOString()};
+  if(editId){const i=S.commitments.findIndex(x=>x.id===editId);if(i>=0)S.commitments[i]=c;}
+  else{if(!S.commitments)S.commitments=[];S.commitments.unshift(c);}
+  saveS();closeModal('modal-commit');loadCommitments();toast('Commitment saved');
+}
+function closeCommitment(id){
+  const c=S.commitments?.find(x=>x.id===id);if(!c)return;
+  c.status='done';c.closedAt=new Date().toISOString();
+  saveS();loadCommitments();toast('✓ Commitment closed');
+}
+function deleteCommitment(id){
+  if(!confirm('Delete this commitment?'))return;
+  S.commitments=(S.commitments||[]).filter(x=>x.id!==id);
+  saveS();loadCommitments();toast('Deleted');
+}
+
+// ══════════════════════════════════════════════════════════
+// RISK REGISTER
+// ══════════════════════════════════════════════════════════
+function loadRisk(){
+  const acc=D.accounts||[];
+  const ops=D.operational||[];
+  const pip=D.pipeline||[];
+  const active=acc.filter(a=>(a['Account Status']||'Active')!=='Churned');
+  const ls=getLatestSkam(ops);
+  const riskOps=Object.values(ls).filter(o=>(o['Risk Flag']||o.riskFlag)==='Yes');
+  const riskNames=new Set(riskOps.map(o=>o['Account Name']||o.account));
+  const riskAcc=active.filter(a=>riskNames.has(a['Company Name']||a.company));
+  const riskMrr=riskAcc.reduce((s,a)=>s+(Number(a['Current MRR (₹)'])||0),0);
+  const riskPip=pip.filter(p=>riskNames.has(p['Account Name']||p.account)&&!['Closed Won','Closed Lost'].includes(p['Opportunity Stage']||p.stage));
+
+  // Banner
+  document.getElementById('risk-banner').innerHTML=`
+    <div class="risk-banner">
+      <div><div style="font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,71,87,.6);margin-bottom:4px">Total MRR at Risk</div>
+      <div class="risk-mrr" id="risk-mrr-val">${fmtMrrFull(riskMrr)}</div>
+      <div class="risk-label">${riskAcc.length} account${riskAcc.length!==1?'s':''} flagged · ₹${riskPip.reduce((s,p)=>s+(Number(p['Potential MRR (₹)'])||0),0).toLocaleString('en-IN')} pipeline attached</div></div>
+      <div style="flex:1"></div>
+      <div style="text-align:right;font-size:12px;color:var(--text-mid)">NRR impact if all churn:<br><span style="font-family:'Syne',sans-serif;font-size:20px;font-weight:700;color:var(--red)">−${active.length?Math.round(riskMrr/(active.reduce((s,a)=>s+(Number(a['Current MRR (₹)'])||0),0)||1)*100):0}%</span></div>
+    </div>`;
+
+  // Trigger tiles
+  let vp=0,es=0,sd=0,cp=0;
+  riskOps.forEach(o=>{if(Number(o['Value Perception']||o.vp)<3)vp++;if(Number(o['Executive Sponsorship']||o.es)<3)es++;if(Number(o['Solution Depth']||o.sd)<3)sd++;if(Number(o['Competitive Positioning']||o.cp)>2.5)cp++;});
+  document.getElementById('risk-triggers').innerHTML=[
+    {label:'Value Perception <3',val:vp,icon:'🎯',color:'red'},
+    {label:'Exec Sponsorship <3',val:es,icon:'👤',color:'red'},
+    {label:'Solution Depth <3',val:sd,icon:'⚡',color:'amber'},
+    {label:'Comp. Position >2.5',val:cp,icon:'⚔',color:'amber'},
+  ].map(t=>`<div class="kpi-card ${t.color}"><div class="kpi-label">${t.label}</div><div class="kpi-value ${t.color}" style="font-size:36px">${t.val}</div><div class="kpi-trend">${t.icon}</div></div>`).join('');
+
+  // Risk table
+  const tableEl=document.getElementById('risk-table');
+  const interventions=S.interventions||[];
+  if(!riskOps.length){tableEl.innerHTML='<div class="empty"><div class="empty-icon">✅</div><p>No risk-flagged accounts</p></div>';return;}
+  tableEl.innerHTML=`<table><thead><tr><th>Account</th><th>SKAM</th><th>VP</th><th>ES</th><th>SD</th><th>CP</th><th>MRR</th><th>Pipeline</th><th>CSM</th><th>Intervention</th><th></th></tr></thead><tbody>${
+    riskOps.sort((a,b)=>Number(a['SKAM Score']||0)-Number(b['SKAM Score']||0)).map(o=>{
+      const n=o['Account Name']||o.account;
+      const accD=riskAcc.find(a=>(a['Company Name']||a.company)===n);
+      const mrr=accD?Number(accD['Current MRR (₹)']||0):0;
+      const oPipMrr=riskPip.filter(p=>(p['Account Name']||p.account)===n).reduce((s,p)=>s+(Number(p['Potential MRR (₹)'])||0),0);
+      const ivn=interventions.find(iv=>iv.account===n);
+      const sc=Number(o['SKAM Score']||0);
+      const vp=Number(o['Value Perception']||o.vp||0);
+      const es=Number(o['Executive Sponsorship']||o.es||0);
+      const sd=Number(o['Solution Depth']||o.sd||0);
+      const cp=Number(o['Competitive Positioning']||o.cp||0);
+      const ivClass={Planned:'bg-amber',InProgress:'bg-blue','In Progress':'bg-blue',Escalated:'bg-red',Resolved:'bg-teal'};
+      return`<tr style="cursor:pointer" onclick="openRiskDrill('${n}')"><td><strong>${n}</strong></td><td><span style="font-family:'Syne',sans-serif;font-size:16px;font-weight:800;color:${sc>=70?'var(--teal)':sc>=50?'var(--amber)':'var(--red)'}">${sc}</span></td><td style="color:${vp<3?'var(--red)':'var(--text-mid)';font-weight:${vp<3?700:400}}">${vp}</td><td style="color:${es<3?'var(--red)':'var(--text-mid)';font-weight:${es<3?700:400}}">${es}</td><td style="color:${sd<3?'var(--red)':'var(--text-mid)';font-weight:${sd<3?700:400}}">${sd}</td><td style="color:${cp>2.5?'var(--red)':'var(--text-mid)';font-weight:${cp>2.5?700:400}}">${cp}</td><td><strong>${fmtMrrFull(mrr)}</strong></td><td style="color:${oPipMrr?'var(--gold)':'var(--text-dim)'}">${oPipMrr?fmtMrr(oPipMrr):'—'}</td><td style="font-size:11px">${accD?accD['CSM']||'—':'—'}</td><td>${ivn?`<span class="badge ${ivClass[ivn.status.replace(' ','')]||'bg-dim'}" style="font-size:9px">${ivn.status}</span>`:'<span style="color:var(--text-dim);font-size:11px">—</span>'}</td><td onclick="event.stopPropagation()"><button class="btn btn-ghost btn-sm" onclick="openRiskDrill('${n}')">Detail →</button></td></tr>`;
+    }).join('')
+  }</tbody></table>`;
+
+  // MRR exposure chart
+  destroyChart('risk-mrr');
+  if(riskAcc.length){
+    const labels=riskAcc.map(a=>a['Company Name']||a.company).slice(0,8);
+    const vals=riskAcc.map(a=>Number(a['Current MRR (₹)'])||0).slice(0,8);
+    charts['risk-mrr']=new Chart(document.getElementById('chart-risk-mrr'),{type:'bar',data:{labels,datasets:[{data:vals,backgroundColor:'rgba(255,71,87,0.6)',borderColor:'var(--red)',borderWidth:1,borderRadius:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{grid:{color:'rgba(255,255,255,0.04)'},ticks:{callback:v=>'₹'+(v/1000).toFixed(0)+'K',font:{size:10}}},x:{grid:{display:false},ticks:{font:{size:9}}}}}});
+  }
+
+  // Intervention tracker
+  const ivList=interventions.filter(iv=>riskNames.has(iv.account));
+  const ivEl=document.getElementById('intervention-tracker');
+  if(ivList.length){
+    const stClass={Planned:'bg-amber','In Progress':'bg-blue',Escalated:'bg-red',Resolved:'bg-teal'};
+    ivEl.innerHTML=ivList.map(iv=>`<div style="padding:10px 0;border-bottom:1px solid var(--border)"><div style="display:flex;align-items:center;gap:8px;margin-bottom:4px"><strong style="font-size:12px">${iv.account}</strong><span class="badge ${stClass[iv.status]||'bg-dim'}" style="font-size:9px">${iv.status}</span></div><div style="font-size:11px;color:var(--text-mid)">${iv.plan||'No plan logged'}</div><div style="font-size:10px;color:var(--text-dim);margin-top:3px">Owner: ${iv.owner||'—'} · Due: ${iv.date?formatDate(iv.date):'—'}</div></div>`).join('');
+  } else {ivEl.innerHTML='<div style="font-size:12px;color:var(--text-dim);padding:12px 0">No interventions logged yet</div>';}
+}
+
+function openRiskDrill(name){
+  const ops=D.operational||[];
+  const pip=D.pipeline||[];
+  const acc=D.accounts||[];
+  const ls=getLatestSkam(ops);
+  const o=ls[name];if(!o){return;}
+  const accD=acc.find(a=>(a['Company Name']||a.company)===name);
+  const oPip=pip.filter(p=>(p['Account Name']||p.account)===name&&!['Closed Won','Closed Lost'].includes(p['Opportunity Stage']||p.stage));
+  const meetings=(D.meetingReviews||[]).filter(r=>(r['Account Name']||r.account)===name).sort((a,b)=>(b['Review Date']||'').localeCompare(a['Review Date']||'')).slice(0,3);
+  const ivn=(S.interventions||[]).find(iv=>iv.account===name);
+  const sc=Number(o['SKAM Score']||0);
+  document.getElementById('risk-drill-title').textContent=`Risk Detail — ${name}`;
+  document.getElementById('risk-drill-content').innerHTML=`
+    <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:18px">
+      ${[['SKAM',sc,'var(--amber)'],['RC',o['Relationship Coverage']||o.rc||'—','var(--blue)'],['SD',o['Solution Depth']||o.sd||'—','var(--gold)'],['VP',o['Value Perception']||o.vp||'—','var(--teal)'],['ES',o['Executive Sponsorship']||o.es||'—','var(--purple)']].map(([l,v,c])=>`<div style="background:rgba(255,255,255,.04);border-radius:8px;padding:14px;text-align:center"><div style="font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--text-dim);margin-bottom:6px">${l}</div><div style="font-family:'Syne',sans-serif;font-size:24px;font-weight:800;color:${c}">${v}</div></div>`).join('')}
+    </div>
+    <div class="grid-2" style="margin-bottom:14px">
+      <div><div style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--text-dim);margin-bottom:4px">Current MRR</div><div style="font-size:18px;font-weight:600;color:var(--text)">${accD?fmtMrrFull(Number(accD['Current MRR (₹)'])||0):'—'}</div></div>
+      <div><div style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--text-dim);margin-bottom:4px">Open Pipeline</div><div style="font-size:18px;font-weight:600;color:var(--gold)">${oPip.length?fmtMrr(oPip.reduce((s,p)=>s+(Number(p['Potential MRR (₹)'])||0),0)):'None'}</div></div>
+    </div>
+    ${meetings.length?`<div style="margin-bottom:14px"><div style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--text-dim);margin-bottom:8px">Recent Meetings</div>${meetings.map(m=>`<div style="padding:8px 0;border-bottom:1px solid var(--border);font-size:12px"><div style="display:flex;gap:8px;align-items:center"><span style="color:var(--text)">${m['Review Date']||'—'}</span><span class="badge bg-dim" style="font-size:9px">${m['Meeting Type']||'—'}</span></div><div style="color:var(--text-mid);margin-top:3px">${(m['Notes']||'').substring(0,120)}${(m['Notes']||'').length>120?'…':''}</div></div>`).join('')}</div>`:''}
+    ${ivn?`<div style="background:var(--blue-d);border:1px solid rgba(74,158,255,.2);border-radius:8px;padding:14px"><div style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--blue);margin-bottom:6px">Active Intervention</div><div style="font-size:12px;color:var(--text);margin-bottom:6px">${ivn.plan||'—'}</div><div style="font-size:11px;color:var(--text-mid)">Owner: ${ivn.owner||'—'} · Status: ${ivn.status} · Due: ${ivn.date?formatDate(ivn.date):'—'}</div></div>`:`<div style="background:var(--red-d);border:1px solid rgba(255,71,87,.2);border-radius:8px;padding:12px;font-size:12px;color:var(--red)">⚠ No intervention logged for this account yet — <button class="btn btn-secondary btn-sm" onclick="closeModal('modal-risk-drill');openInterventionModalFor('${name}')">Log Now</button></div>`}`;
+  openModal('modal-risk-drill');
+}
+
+// ══════════════════════════════════════════════════════════
+// GROWTH ENGINE
+// ══════════════════════════════════════════════════════════
+function loadGrowth(){
+  const pip=D.pipeline||[];
+  const acc=D.accounts||[];
+  const openPip=pip.filter(p=>!['Closed Won','Closed Lost'].includes(p['Opportunity Stage']||p.stage));
+  const wonPip=pip.filter(p=>(p['Opportunity Stage']||p.stage)==='Closed Won');
+  const lostPip=pip.filter(p=>(p['Opportunity Stage']||p.stage)==='Closed Lost');
+  const delayedPip=pip.filter(p=>(p['Opportunity Stage']||p.stage)==='Delayed Closure');
+  const openMrr=openPip.reduce((s,p)=>s+(Number(p['Potential MRR (₹)'])||0),0);
+  const wonMrr=wonPip.reduce((s,p)=>s+(Number(p['Potential MRR (₹)'])||0),0);
+  const lostMrr=lostPip.reduce((s,p)=>s+(Number(p['Potential MRR (₹)'])||0),0);
+  const stale=openPip.filter(p=>daysSince(p['Timestamp']||'')>30);
+  const convRate=wonPip.length+lostPip.length>0?Math.round(wonPip.length/(wonPip.length+lostPip.length)*100):null;
+
+  // KPIs
+  document.getElementById('growth-kpis').innerHTML=[
+    {label:'Open Pipeline',val:fmtMrr(openMrr),sub:openPip.length+' deals',color:'blue'},
+    {label:'Closed Won',val:fmtMrr(wonMrr),sub:wonPip.length+' deals converted',color:'teal'},
+    {label:'Conversion Rate',val:convRate!==null?convRate+'%':'—',sub:'Won / (Won+Lost)',color:convRate>=60?'teal':convRate>=40?'amber':'red'},
+    {label:'Stale Pipeline',val:stale.length,sub:'30+ days no update',color:stale.length>3?'red':stale.length>0?'amber':'teal'},
+    {label:'Lost MRR',val:fmtMrr(lostMrr),sub:lostPip.length+' deals lost',color:'red'},
+  ].map(k=>`<div class="kpi-card ${k.color}"><div class="kpi-label">${k.label}</div><div class="kpi-value ${k.color}" style="font-size:26px">${k.val}</div><div class="kpi-sub">${k.sub}</div></div>`).join('');
+
+  // Pipeline Funnel
+  const stages=['Identified','Qualified','Demo Done','Proposal Sent','Closed Won','Delayed Closure'];
+  const stageColors={'Identified':'rgba(74,158,255,.7)','Qualified':'rgba(155,127,255,.7)','Demo Done':'rgba(232,168,56,.7)','Proposal Sent':'rgba(255,184,48,.7)','Closed Won':'rgba(0,201,167,.7)','Delayed Closure':'rgba(255,71,87,.7)'};
+  const maxCount=Math.max(...stages.map(s=>pip.filter(p=>(p['Opportunity Stage']||p.stage)===s).length),1);
+  const funnelEl=document.getElementById('pipeline-funnel');
+  funnelEl.innerHTML=stages.map(s=>{
+    const items=pip.filter(p=>(p['Opportunity Stage']||p.stage)===s);
+    const mrr=items.reduce((sum,p)=>sum+(Number(p['Potential MRR (₹)'])||0),0);
+    const pct=Math.max(items.length/maxCount*100,5);
+    return`<div class="funnel-bar">
+      <div class="funnel-label">${s}</div>
+      <div class="funnel-track"><div class="funnel-fill" style="width:${pct}%;background:${stageColors[s]||'rgba(255,255,255,.2)'}">${items.length>0?items.length:''}</div></div>
+      <div class="funnel-count">${items.length} deal${items.length!==1?'s':''}</div>
+      <div class="funnel-mrr">${mrr?fmtMrr(mrr):'—'}</div>
+    </div>`;}).join('');
+
+  // Stage donut
+  destroyChart('stage');
+  const stageCounts=stages.map(s=>pip.filter(p=>(p['Opportunity Stage']||p.stage)===s).length);
+  if(stageCounts.some(c=>c>0)){
+    charts['stage']=new Chart(document.getElementById('chart-stage'),{type:'doughnut',data:{labels:stages,datasets:[{data:stageCounts,backgroundColor:Object.values(stageColors),borderWidth:2,borderColor:'var(--card)'}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{font:{size:9},padding:8}}},cutout:'60%'}});
+  }
+
+  // Pipeline table
+  const tableEl=document.getElementById('growth-pipeline-table');
+  if(!openPip.length){tableEl.innerHTML='<div class="empty"><p>No open pipeline entries</p></div>';return;}
+  tableEl.innerHTML=`<table><thead><tr><th>Account</th><th>AM</th><th>Type</th><th>Product</th><th>MRR</th><th>Stage</th><th>Close</th><th>Age</th></tr></thead><tbody>${openPip.sort((a,b)=>daysSince(a['Timestamp']||'')-daysSince(b['Timestamp']||'')).map(p=>{
+    const age=daysSince(p['Timestamp']||'');const isStale=age>30;
+    return`<tr style="background:${isStale?'rgba(255,71,87,0.04)':''}"><td><strong>${p['Account Name']||p.account}</strong></td><td style="font-size:11px">${p['Account Manager']||p.am||'—'}</td><td><span class="badge bg-blue" style="font-size:9px">${p['Opportunity Type']||p.oppType||'—'}</span></td><td style="font-size:11px;max-width:100px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${p['Product/Modules']||p.products||'—'}</td><td style="font-weight:600;color:var(--gold)">${fmtMrrFull(Number(p['Potential MRR (₹)'])||0)}</td><td><span class="badge bg-dim" style="font-size:9px">${p['Opportunity Stage']||p.stage}</span></td><td style="font-size:11px">${p['Expected Close Date']||'—'}</td><td><span style="font-size:11px;color:${isStale?'var(--red)':'age'>=14?'var(--amber)':'var(--teal)'};font-weight:600">${age}d${isStale?' ⚠':''}</span></td></tr>`;
+  }).join('')}</tbody></table>`;
+
+  // AM Conversion
+  const amConvEl=document.getElementById('growth-am-conv');
+  const amData={};
+  AM_LIST.forEach(am=>{const w=wonPip.filter(p=>(p['Account Manager']||p.am)===am).length;const l=lostPip.filter(p=>(p['Account Manager']||p.am)===am).length;const o2=openPip.filter(p=>(p['Account Manager']||p.am)===am).length;if(w+l+o2>0)amData[am]={won:w,lost:l,open:o2,rate:w+l>0?Math.round(w/(w+l)*100):null};});
+  const amEntries=Object.entries(amData).sort((a,b)=>(b[1].rate||0)-(a[1].rate||0));
+  amConvEl.innerHTML=amEntries.length?amEntries.map(([name,d])=>`<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border)"><div style="flex:1"><div style="font-size:12px;font-weight:600;color:var(--text)">${name.split(' ')[0]}</div><div style="font-size:10px;color:var(--text-dim)">${d.won}W · ${d.lost}L · ${d.open} open</div></div>${d.rate!==null?`<div style="text-align:right"><div style="font-family:'Syne',sans-serif;font-size:18px;font-weight:800;color:${d.rate>=60?'var(--teal)':d.rate>=40?'var(--amber)':'var(--red)'}">${d.rate}%</div></div>`:'<span style="color:var(--text-dim);font-size:11px">—</span>'}</div>`).join(''):'<div class="empty" style="padding:20px"><p>No pipeline data</p></div>';
+
+  // Delay/Loss reasons
+  const reasonsEl=document.getElementById('growth-reasons');
+  const delayReasons={};const lostReasons={};
+  [...delayedPip,...wonPip.filter(p=>(p['MRR Status']||p.mrrStatus)==='Delayed MRR')].forEach(p=>{const r=p['Delay Reason']||p.delayReason||'Unknown';delayReasons[r]=(delayReasons[r]||0)+1;});
+  lostPip.forEach(p=>{const r=p['Lost Reason']||p.lostReason||'Unknown';lostReasons[r]=(lostReasons[r]||0)+1;});
+  let html='';
+  if(Object.keys(delayReasons).length){html+=`<div style="font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--amber);margin-bottom:8px">Delay Reasons</div>`+Object.entries(delayReasons).sort((a,b)=>b[1]-a[1]).map(([r,c])=>`<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border);font-size:12px"><span style="color:var(--text-mid)">${r}</span><span class="badge bg-amber">${c}</span></div>`).join('')+'<div class="sep"></div>';}
+  if(Object.keys(lostReasons).length){html+=`<div style="font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--red);margin-bottom:8px">Lost Reasons</div>`+Object.entries(lostReasons).sort((a,b)=>b[1]-a[1]).map(([r,c])=>`<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border);font-size:12px"><span style="color:var(--text-mid)">${r}</span><span class="badge bg-red">${c}</span></div>`).join('');}
+  reasonsEl.innerHTML=html||'<div class="empty" style="padding:20px"><p>No delay or loss data yet</p></div>';
+}
+
+// ══════════════════════════════════════════════════════════
+// LEADING INDICATORS
+// ══════════════════════════════════════════════════════════
+function loadIndicators(){
+  const acc=D.accounts||[];
+  const ops=D.operational||[];
+  const active=acc.filter(a=>(a['Account Status']||'Active')!=='Churned');
+  const ls=getLatestSkam(ops);
+  const now=new Date();
+  const d30=new Date(now-30*86400000);
+  const d45=new Date(now-45*86400000);
+  const d90=new Date(now-90*86400000);
+  const reviewed30=Object.values(ls).filter(o=>new Date(o['Review Date']||'')>=d30).length;
+  let mbrOD=0,qbrOD=0;
+  Object.values(ls).forEach(o=>{const mbr=o['Last MBR Date']||o.lastMbr;const qbr=o['Last QBR Date']||o.lastQbr;if(!mbr||new Date(mbr)<d45)mbrOD++;if(!qbr||new Date(qbr)<d90)qbrOD++;});
+  const reviewPct=active.length?Math.round(reviewed30/active.length*100):0;
+  const mbrPct=Object.keys(ls).length?Math.round((Object.keys(ls).length-mbrOD)/Object.keys(ls).length*100):0;
+  const qbrPct=Object.keys(ls).length?Math.round((Object.keys(ls).length-qbrOD)/Object.keys(ls).length*100):0;
+  const demoActive=(ops||[]).filter(o=>o['Demo Status']&&!['','Closed Lost'].includes(o['Demo Status']||'')).length;
+
+  document.getElementById('indicator-kpis').innerHTML=[
+    {label:'Review Compliance',val:reviewPct+'%',sub:`${reviewed30}/${active.length} reviewed (30d)`,color:reviewPct>=70?'teal':reviewPct>=40?'amber':'red'},
+    {label:'MBR Compliance',val:mbrPct+'%',sub:mbrOD+' overdue (45d+)',color:mbrPct>=80?'teal':mbrPct>=60?'amber':'red'},
+    {label:'QBR Compliance',val:qbrPct+'%',sub:qbrOD+' overdue (90d+)',color:qbrPct>=70?'teal':qbrPct>=50?'amber':'red'},
+    {label:'Active Demos',val:demoActive,sub:'In demo pipeline',color:demoActive>3?'teal':demoActive>0?'amber':'red'},
+  ].map(k=>`<div class="kpi-card ${k.color}"><div class="kpi-label">${k.label}</div><div class="kpi-value ${k.color}" style="font-size:32px">${k.val}</div><div class="kpi-sub">${k.sub}</div></div>`).join('');
+
+  // Review compliance by CSM
+  const compEl=document.getElementById('review-compliance');
+  const csmComp=CSM_LIST.map(csm=>{
+    const csmOps=ops.filter(o=>(o['Reviewed By']||o.reviewer)===csm&&new Date(o['Review Date']||'')>=d30);
+    const csmAccs=active.filter(a=>(a['CSM']||a.csm)===csm).length;
+    const rate=csmAccs?Math.round(csmOps.length/csmAccs*100):0;
+    return{csm,count:csmOps.length,total:csmAccs,rate};
+  });
+  compEl.innerHTML=csmComp.map(c=>`<div class="health-bar-row">
+    <div class="health-bar-label" style="width:140px">${c.csm.split(' ')[0]}</div>
+    <div class="health-bar-track"><div class="health-bar-fill" style="width:${c.rate}%;background:${c.rate>=70?'var(--teal)':c.rate>=40?'var(--amber)':'var(--red)'}"></div></div>
+    <div style="font-size:11px;color:var(--text-mid);width:60px;text-align:right">${c.count}/${c.total}</div>
+    <div class="health-bar-val" style="color:${c.rate>=70?'var(--teal)':c.rate>=40?'var(--amber)':'var(--red)'};">${c.rate}%</div>
+  </div>`).join('');
+
+  // MBR/QBR matrix
+  const matrixEl=document.getElementById('cadence-matrix');
+  const rows=Object.entries(ls).slice(0,12).map(([n,o])=>{
+    const mbr=o['Last MBR Date']||o.lastMbr;const qbr=o['Last QBR Date']||o.lastQbr;
+    const mbrDays=mbr?daysSince(mbr):999;const qbrDays=qbr?daysSince(qbr):999;
+    const mbrOk=mbrDays<45;const qbrOk=qbrDays<90;
+    return`<div style="display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid var(--border)"><div style="flex:1;font-size:11px;color:var(--text)">${n}</div><span class="badge ${mbrOk?'bg-teal':'bg-red'}" style="font-size:9px">MBR${mbrOk?' ✓':' '+mbrDays+'d'}</span><span class="badge ${qbrOk?'bg-teal':'bg-red'}" style="font-size:9px">QBR${qbrOk?' ✓':' '+qbrDays+'d'}</span></div>`;
+  });
+  matrixEl.innerHTML=rows.join('');
+
+  // Dimension breakdown
+  const dims2={RC:[],SD:[],CP:[],VP:[],ES:[]};
+  ops.forEach(o=>{dims2.RC.push(Number(o['Relationship Coverage']||0));dims2.SD.push(Number(o['Solution Depth']||0));dims2.CP.push(Number(o['Competitive Positioning']||0));dims2.VP.push(Number(o['Value Perception']||0));dims2.ES.push(Number(o['Executive Sponsorship']||0));});
+  const avg2=arr=>arr.length?parseFloat((arr.reduce((a,b)=>a+b)/arr.length).toFixed(2)):0;
+  const dimEl=document.getElementById('dim-breakdown');
+  const dimData2=[{l:'Relationship Coverage (RC)',k:'RC',v:avg2(dims2.RC),c:'var(--blue)',invert:false},{l:'Solution Depth (SD)',k:'SD',v:avg2(dims2.SD),c:'var(--gold)',invert:false},{l:'Competitive Positioning (CP)',k:'CP',v:avg2(dims2.CP),c:'var(--red)',invert:true},{l:'Value Perception (VP)',k:'VP',v:avg2(dims2.VP),c:'var(--teal)',invert:false},{l:'Executive Sponsorship (ES)',k:'ES',v:avg2(dims2.ES),c:'var(--purple)',invert:false}];
+  dimEl.innerHTML=dimData2.map(d=>`<div style="margin-bottom:14px"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px"><div style="font-size:11px;color:var(--text-mid)">${d.l}</div><div style="display:flex;align-items:center;gap:6px"><span style="font-family:'Syne',sans-serif;font-size:18px;font-weight:700;color:${d.c}">${d.v}</span><span style="font-size:9px;color:var(--text-dim)">/5 ${d.invert?'(lower=better)':''}</span></div></div><div class="progress-track"><div class="progress-fill" style="width:${d.v/5*100}%;background:${d.c}"></div></div></div>`).join('');
+
+  // Demo activity
+  const demos=ops.filter(o=>o['Demo Status']&&o['Demo Status']!=='').slice(0,8);
+  const demoEl=document.getElementById('demo-activity');
+  const demoStatus={'Scheduled':'bg-amber','Done':'bg-blue','Closed Lost':'bg-red'};
+  demoEl.innerHTML=demos.length?demos.map(d=>`<div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--border)"><div style="flex:1"><div style="font-size:12px;font-weight:600;color:var(--text)">${d['Account Name']||d.account}</div><div style="font-size:11px;color:var(--text-dim)">${d['Demo Products']||d.demoProducts||'—'}</div></div><span class="badge ${demoStatus[d['Demo Status']]||'bg-dim'}" style="font-size:9px">${d['Demo Status']}</span></div>`).join(''):'<div class="empty" style="padding:20px"><p>No demo data logged</p></div>';
+
+  // No activity table
+  const noActEl=document.getElementById('no-activity-table');
+  const noAct=Object.entries(ls).filter(([n,o])=>{const lm=o['Last Meeting Date']||o.lastMeeting;return !lm||daysSince(lm)>30;}).map(([n,o])=>({n,days:o['Last Meeting Date']?daysSince(o['Last Meeting Date']||''):999,score:Number(o['SKAM Score']||0)})).sort((a,b)=>b.days-a.days).slice(0,10);
+  noActEl.innerHTML=noAct.length?`<table><thead><tr><th>Account</th><th>Days Since Last Meeting</th><th>SKAM</th><th>Flag</th></tr></thead><tbody>${noAct.map(a=>`<tr><td><strong>${a.n}</strong></td><td style="color:${a.days>60?'var(--red)':a.days>30?'var(--amber)':'var(--text-mid)';font-weight:${a.days>30?600:400}}">${a.days===999?'Never':a.days+'d'}</td><td><span style="font-family:'Syne',sans-serif;font-weight:800;color:${a.score>=70?'var(--teal)':a.score>=50?'var(--amber)':'var(--red)'}">${a.score}</span></td><td>${a.days>60?'<span class="badge bg-red">⚠ Critical</span>':a.days>30?'<span class="badge bg-amber">Watch</span>':'<span class="badge bg-dim">OK</span>'}</td></tr>`).join('')}</tbody></table>`:'<div class="empty" style="padding:20px"><div class="empty-icon" style="font-size:20px">✅</div><p>All accounts engaged in the last 30 days</p></div>';
+}
+
+// ══════════════════════════════════════════════════════════
+// BOTTLENECKS
+// ══════════════════════════════════════════════════════════
+function loadBottlenecks(){
+  const all=S.blockers||[];
+  const open=all.filter(b=>!b.resolved);
+  const resolved=all.filter(b=>b.resolved);
+  const highCount=open.filter(b=>b.impact==='High').length;
+  document.getElementById('blocker-stats').innerHTML=[
+    {label:'Open Bottlenecks',val:open.length,color:'red',icon:'⊘'},
+    {label:'High Impact',val:highCount,color:'amber',icon:'🔴'},
+    {label:'Resolved',val:resolved.length,color:'teal',icon:'✓'},
+  ].map(s=>`<div class="kpi-card ${s.color}"><div class="kpi-label">${s.label}</div><div class="kpi-value ${s.color}" style="font-size:36px">${s.val}</div><div class="kpi-trend">${s.icon}</div></div>`).join('');
+  const typeClass={Decision:'anno-decision',Resource:'anno-resource',Escalation:'anno-escalation',Process:'anno-process'};
+  const impactColors={High:'var(--red)',Medium:'var(--amber)',Low:'var(--text-dim)'};
+  const blEl=document.getElementById('blocker-list');
+  if(!open.length){blEl.innerHTML='<div class="empty"><div class="empty-icon">⊘</div><p>No open bottlenecks — the path is clear</p></div>';}
+  else{blEl.innerHTML=open.sort((a,b)=>{const o={High:0,Medium:1,Low:2};return o[a.impact]-o[b.impact];}).map(b=>`
+    <div class="blocker-card ${b.impact==='Medium'?'medium':b.impact==='Low'?'low':''}" id="bl-${b.id}">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px">
+        <div style="flex:1">
+          <div class="blocker-title">${b.title}</div>
+          ${b.ask?`<div class="blocker-ask"><span style="font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--gold)">The Ask: </span>${b.ask}</div>`:''}
+          ${b.impactVal?`<div style="font-size:11px;color:var(--text-dim);margin-top:6px">Impact: ${b.impactVal}</div>`:''}
+        </div>
+        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;flex-shrink:0">
+          <span style="font-size:11px;font-weight:700;color:${impactColors[b.impact]||'var(--text-dim)'}">${b.impact}</span>
+          <span class="badge ${typeClass[b.type]||'bg-dim'} anno-tag">${b.type}</span>
+        </div>
+      </div>
+      <div class="blocker-meta">
+        ${b.owner?`<span style="font-size:11px;color:var(--text-dim)">→ ${b.owner}</span>`:''}
+        ${b.impactArea?`<span class="badge bg-dim" style="font-size:9px">${b.impactArea}</span>`:''}
+        <button class="btn btn-ghost btn-sm" style="font-size:10px" onclick="editBlocker('${b.id}')">Edit</button>
+        <button class="btn btn-teal btn-sm" style="font-size:10px" onclick="resolveBlocker('${b.id}')">✓ Resolve</button>
+        <button class="btn btn-danger btn-sm" style="font-size:10px" onclick="deleteBlocker('${b.id}')">✕</button>
+      </div>
+    </div>`).join('');}
+
+  const brEl=document.getElementById('blocker-resolved-list');
+  brEl.innerHTML=resolved.length?resolved.map(b=>`<div style="padding:12px;background:rgba(0,201,167,0.04);border:1px solid rgba(0,201,167,0.12);border-radius:8px;margin-bottom:8px;opacity:.7"><div style="display:flex;align-items:center;gap:8px"><span class="badge bg-teal" style="font-size:9px">✓ Resolved</span><span style="font-size:12px;color:var(--text-mid)">${b.title}</span><span style="font-size:10px;color:var(--text-dim);margin-left:auto">${b.resolvedAt?formatDate(b.resolvedAt):''}</span></div></div>`).join(''):'<div style="font-size:12px;color:var(--text-dim);padding:12px 0">No resolved bottlenecks yet</div>';
+  updateBadges();
+}
+
+function openAddBlockerModal(){
+  ['bl-title','bl-ask','bl-impact-val','bl-owner'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('bl-type').value='Decision';
+  document.getElementById('bl-impact').value='High';
+  document.getElementById('bl-impact-area').value='Revenue';
+  document.getElementById('bl-edit-id').value='';
+  openModal('modal-blocker');
+}
+function editBlocker(id){
+  const b=S.blockers?.find(x=>x.id===id);if(!b)return;
+  document.getElementById('bl-title').value=b.title||'';
+  document.getElementById('bl-ask').value=b.ask||'';
+  document.getElementById('bl-impact-val').value=b.impactVal||'';
+  document.getElementById('bl-owner').value=b.owner||'';
+  document.getElementById('bl-type').value=b.type||'Decision';
+  document.getElementById('bl-impact').value=b.impact||'High';
+  document.getElementById('bl-impact-area').value=b.impactArea||'Revenue';
+  document.getElementById('bl-edit-id').value=id;
+  openModal('modal-blocker');
+}
+function saveBlocker(){
+  const title=document.getElementById('bl-title').value.trim();
+  if(!title){toast('Please describe the bottleneck','⚠');return;}
+  const editId=document.getElementById('bl-edit-id').value;
+  const b={id:editId||Date.now().toString(36),title,ask:document.getElementById('bl-ask').value,impactVal:document.getElementById('bl-impact-val').value,owner:document.getElementById('bl-owner').value,type:document.getElementById('bl-type').value,impact:document.getElementById('bl-impact').value,impactArea:document.getElementById('bl-impact-area').value,resolved:false,createdAt:editId?(S.blockers?.find(x=>x.id===editId)?.createdAt||new Date().toISOString()):new Date().toISOString()};
+  if(editId){const i=(S.blockers||[]).findIndex(x=>x.id===editId);if(i>=0)S.blockers[i]=b;}
+  else{if(!S.blockers)S.blockers=[];S.blockers.unshift(b);}
+  saveS();closeModal('modal-blocker');loadBottlenecks();toast('Bottleneck logged');
+}
+function resolveBlocker(id){
+  const b=S.blockers?.find(x=>x.id===id);if(!b)return;
+  b.resolved=true;b.resolvedAt=new Date().toISOString();
+  saveS();loadBottlenecks();toast('✓ Bottleneck resolved');
+}
+function deleteBlocker(id){
+  if(!confirm('Delete this bottleneck?'))return;
+  S.blockers=(S.blockers||[]).filter(x=>x.id!==id);
+  saveS();loadBottlenecks();toast('Deleted');
+}
+
+// ══════════════════════════════════════════════════════════
+// MOMENTUM
+// ══════════════════════════════════════════════════════════
+function loadMomentum(){
+  const wins=S.wins||[];
+  const typeColors={Retention:'teal',Expansion:'gold',Process:'blue',Relationship:'purple',Team:'amber'};
+  const typeCounts={};wins.forEach(w=>{typeCounts[w.type]=(typeCounts[w.type]||0)+1;});
+  document.getElementById('momentum-kpis').innerHTML=[
+    {label:'Total Wins',val:wins.length,color:'teal'},
+    {label:'Retention',val:wins.filter(w=>w.type==='Retention').length,color:'teal'},
+    {label:'Expansion',val:wins.filter(w=>w.type==='Expansion').length,color:'gold'},
+    {label:'Process / Team',val:wins.filter(w=>['Process','Team'].includes(w.type)).length,color:'blue'},
+  ].map(k=>`<div class="kpi-card ${k.color}"><div class="kpi-label">${k.label}</div><div class="kpi-value ${k.color}" style="font-size:36px">${k.val}</div></div>`).join('');
+  const wEl=document.getElementById('win-list');
+  if(!wins.length){wEl.innerHTML='<div class="empty"><div class="empty-icon">★</div><p>No wins logged — go get some!</p></div>';return;}
+  wEl.innerHTML=wins.map(w=>`
+    <div class="win-card ${w.type?.toLowerCase()}">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px">
+        <div style="flex:1">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px"><span class="badge bg-${typeColors[w.type]||'dim'}">${w.type}</span>${w.account?`<span style="font-size:11px;color:var(--text-dim)">${w.account}</span>`:''}</div>
+          <div class="win-title">${w.title}</div>
+          ${w.impact?`<div class="win-detail" style="margin-top:6px;color:var(--gold)">💡 ${w.impact}</div>`:''}
+          ${w.credit?`<div style="font-size:11px;color:var(--text-dim);margin-top:4px">Credit: ${w.credit}</div>`:''}
+        </div>
+        <div style="display:flex;flex-direction:column;gap:4px;flex-shrink:0">
+          <button class="btn btn-ghost btn-sm" style="font-size:10px" onclick="editWin('${w.id}')">Edit</button>
+          <button class="btn btn-danger btn-sm" style="font-size:10px" onclick="deleteWin('${w.id}')">✕</button>
+        </div>
+      </div>
+    </div>`).join('');
+}
+
+function openAddWinModal(){
+  ['wn-title','wn-account','wn-impact','wn-credit'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('wn-type').value='Retention';
+  document.getElementById('wn-edit-id').value='';
+  openModal('modal-win');
+}
+function editWin(id){
+  const w=S.wins?.find(x=>x.id===id);if(!w)return;
+  document.getElementById('wn-title').value=w.title||'';
+  document.getElementById('wn-account').value=w.account||'';
+  document.getElementById('wn-impact').value=w.impact||'';
+  document.getElementById('wn-credit').value=w.credit||'';
+  document.getElementById('wn-type').value=w.type||'Retention';
+  document.getElementById('wn-edit-id').value=id;
+  openModal('modal-win');
+}
+function saveWin(){
+  const title=document.getElementById('wn-title').value.trim();
+  if(!title){toast('Please describe the win','⚠');return;}
+  const editId=document.getElementById('wn-edit-id').value;
+  const w={id:editId||Date.now().toString(36),title,account:document.getElementById('wn-account').value,impact:document.getElementById('wn-impact').value,credit:document.getElementById('wn-credit').value,type:document.getElementById('wn-type').value,createdAt:editId?(S.wins?.find(x=>x.id===editId)?.createdAt||new Date().toISOString()):new Date().toISOString()};
+  if(editId){const i=(S.wins||[]).findIndex(x=>x.id===editId);if(i>=0)S.wins[i]=w;}
+  else{if(!S.wins)S.wins=[];S.wins.unshift(w);}
+  saveS();closeModal('modal-win');loadMomentum();loadHub();toast('Win logged — ★');
+}
+function deleteWin(id){
+  if(!confirm('Delete this win?'))return;
+  S.wins=(S.wins||[]).filter(x=>x.id!==id);
+  saveS();loadMomentum();toast('Deleted');
+}
+
+// ══════════════════════════════════════════════════════════
+// INTERVENTIONS
+// ══════════════════════════════════════════════════════════
+function openInterventionModal(){
+  ['iv-account','iv-owner','iv-plan'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('iv-status').value='Planned';
+  document.getElementById('iv-date').value='';
+  openModal('modal-intervention');
+}
+function openInterventionModalFor(account){
+  openInterventionModal();
+  document.getElementById('iv-account').value=account;
+  openModal('modal-intervention');
+}
+function saveIntervention(){
+  const account=document.getElementById('iv-account').value.trim();
+  if(!account){toast('Account required','⚠');return;}
+  const iv={id:Date.now().toString(36),account,status:document.getElementById('iv-status').value,owner:document.getElementById('iv-owner').value,plan:document.getElementById('iv-plan').value,date:document.getElementById('iv-date').value};
+  const existing=(S.interventions||[]).findIndex(x=>x.account===account);
+  if(!S.interventions)S.interventions=[];
+  if(existing>=0)S.interventions[existing]=iv;else S.interventions.push(iv);
+  saveS();closeModal('modal-intervention');loadRisk();toast('Intervention logged');
+}
+
+// ══════════════════════════════════════════════════════════
+// AI BRIEF GENERATOR
+// ══════════════════════════════════════════════════════════
+function generateBrief(){
+  const acc=D.accounts||[];
+  const ops=D.operational||[];
+  const pip=D.pipeline||[];
+  const active=acc.filter(a=>(a['Account Status']||'Active')!=='Churned');
+  const churned=acc.filter(a=>(a['Account Status']||'')===  'Churned');
+  const ls=getLatestSkam(ops);
+  const {nrr}=calcNRR(active,churned,pip);
+  const riskOps=Object.values(ls).filter(o=>(o['Risk Flag']||o.riskFlag)==='Yes');
+  const openPip=pip.filter(p=>!['Closed Won','Closed Lost'].includes(p['Opportunity Stage']||p.stage));
+  const wonPip=pip.filter(p=>(p['Opportunity Stage']||p.stage)==='Closed Won');
+  const scArr=Object.values(ls).map(o=>Number(o['SKAM Score']||o.skamScore)).filter(Boolean);
+  const avgSkam=scArr.length?Math.round(scArr.reduce((a,b)=>a+b)/scArr.length):0;
+  const d30=new Date(Date.now()-30*86400000);
+  const reviewed30=Object.values(ls).filter(o=>new Date(o['Review Date']||'')>=d30).length;
+  const openCommits=(S.commitments||[]).filter(c=>c.status!=='done');
+  const openBlockers=(S.blockers||[]).filter(b=>!b.resolved);
+  const recentWins=(S.wins||[]).slice(0,5);
+  const ctxHub=S.contextNotes?.hub||'';
+  const riskMrr=active.filter(a=>riskOps.find(o=>(o['Account Name']||o.account)===(a['Company Name']||a.company))).reduce((s,a)=>s+(Number(a['Current MRR (₹)'])||0),0);
+  const pipMrr=openPip.reduce((s,p)=>s+(Number(p['Potential MRR (₹)'])||0),0);
+
+  const prompt=`You are helping an AVP of Customer Success at FieldAssist (a B2B SaaS Route-to-Market platform for CPG/FMCG companies in India) prepare for a SteerCo with the COO and CRO. Write an executive pre-read brief in flowing prose — no bullet points, no headers. Four tight paragraphs only.
+
+LIVE PORTFOLIO DATA:
+━━━━━━━━━━━━━━━━━━━━
+Session: #${S.session?.num||'—'} | Date: ${S.session?.date||'Today'} | Attendees: ${(S.session?.attendees||DEFAULT_ATTENDEES).join(', ')}
+
+PORTFOLIO HEALTH:
+- Total Active Accounts: ${active.length}
+- Net Revenue Retention (NRR): ${nrr!==null?nrr+'%':'Not calculable — need expansion/churn data'}
+- Risk Flagged Accounts: ${riskOps.length} (₹${riskMrr.toLocaleString('en-IN')} combined MRR at risk)
+- Avg SKAM Health Score: ${avgSkam}/100
+- Accounts Reviewed (30d): ${reviewed30}/${active.length} (${active.length?Math.round(reviewed30/active.length*100):0}%)
+
+TOP RISK ACCOUNTS:
+${riskOps.slice(0,5).map(o=>`- ${o['Account Name']||o.account}: SKAM ${o['SKAM Score']||o.skamScore}, VP=${o['Value Perception']||o.vp}, ES=${o['Executive Sponsorship']||o.es}`).join('\n')||'None'}
+
+GROWTH PIPELINE:
+- Open Pipeline MRR: ₹${pipMrr.toLocaleString('en-IN')} (${openPip.length} deals)
+- Closed Won MRR: ₹${wonPip.reduce((s,p)=>s+(Number(p['Potential MRR (₹)'])||0),0).toLocaleString('en-IN')}
+- Stale Deals (30d+): ${openPip.filter(p=>daysSince(p['Timestamp']||'')>30).length}
+- Delayed Closure: ${pip.filter(p=>(p['Opportunity Stage']||p.stage)==='Delayed Closure').length} deals
+
+OPEN COMMITMENTS (${openCommits.length} pending):
+${openCommits.slice(0,5).map(c=>`- [${c.priority}/${c.type}] ${c.text} (Owner: ${c.owner||'—'}, Due: ${c.due?formatDate(c.due):'—'})`).join('\n')||'None'}
+
+BOTTLENECKS & ASKS (${openBlockers.length} open):
+${openBlockers.slice(0,4).map(b=>`- [${b.impact} Impact / ${b.type}] ${b.title}${b.ask?' → Ask: '+b.ask:''}`).join('\n')||'None'}
+
+MOMENTUM (recent wins):
+${recentWins.map(w=>`- [${w.type}] ${w.title}${w.impact?' — '+w.impact:''}`).join('\n')||'No wins logged yet'}
+
+AGENDA CONTEXT:
+${ctxHub||'No context added for this session'}
+━━━━━━━━━━━━━━━━━━━━
+
+Write the pre-read brief now. Structure:
+Para 1: Portfolio health story — NRR, SKAM trajectory, the overall narrative of where the portfolio is.
+Para 2: Risk register — which accounts, what the exposure is, what interventions are in flight or needed.
+Para 3: Growth engine — pipeline quality, conversion momentum, what's working and what's stalling.
+Para 4: The leadership agenda — open commitments, active bottlenecks, what decisions or resources are needed today.
+
+Be specific with numbers. Be consultative, not reportorial. Write as if you are the AVP who owns the room.`;
+
+  document.getElementById('brief-prompt').textContent=prompt;
+  openModal('modal-brief');
+}
+function copyBrief(){
+  const text=document.getElementById('brief-prompt').textContent;
+  if(navigator.clipboard)navigator.clipboard.writeText(text).then(()=>toast('Prompt copied — paste in Claude.ai','✦'));
+  else{const ta=document.createElement('textarea');ta.value=text;document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);toast('Copied','✦');}
+}
+
+// ══════════════════════════════════════════════════════════
+// BADGES & HELPERS
+// ══════════════════════════════════════════════════════════
+function updateBadges(){
+  const openCommits=(S.commitments||[]).filter(c=>c.status!=='done').length;
+  const openBlocks=(S.blockers||[]).filter(b=>!b.resolved).length;
+  const cb=document.getElementById('badge-commit');
+  const bb=document.getElementById('badge-blocks');
+  if(cb){cb.textContent=openCommits;cb.style.display=openCommits>0?'':'none';}
+  if(bb){bb.textContent=openBlocks;bb.style.display=openBlocks>0?'':'none';}
+}
+function openModal(id){const el=document.getElementById(id);if(el){el.classList.add('open');}}
+function closeModal(id){const el=document.getElementById(id);if(el)el.classList.remove('open');}
+document.addEventListener('click',e=>{if(e.target.classList.contains('modal-overlay'))e.target.classList.remove('open');});
+function toast(msg,icon){
+  const t=document.getElementById('toast');
+  document.getElementById('toast-msg').textContent=msg;
+  document.getElementById('toast-icon').textContent=icon||'✓';
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),3000);
+}
+</script>
+</body>
+</html>
