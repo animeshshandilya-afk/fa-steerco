@@ -351,6 +351,21 @@ canvas{max-height:100%}
       </div>
     </div>
 
+    <!-- PORTFOLIO MRR STRIP -->
+    <div style="background:linear-gradient(135deg,rgba(0,201,167,0.08),rgba(74,158,255,0.06));border:1px solid rgba(0,201,167,0.15);border-radius:14px;padding:18px 24px;margin-bottom:16px;display:flex;align-items:center;gap:0;overflow:hidden" id="mrr-strip">
+      <div style="flex:1;border-right:1px solid rgba(255,255,255,.07);padding-right:24px">
+        <div style="font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--text-dim);margin-bottom:6px">Total Portfolio MRR</div>
+        <div style="font-family:'Syne',sans-serif;font-size:38px;font-weight:800;color:var(--teal)" id="strip-total-mrr">—</div>
+        <div style="font-size:11px;color:var(--text-dim);margin-top:4px" id="strip-account-count">— active accounts</div>
+      </div>
+      <div id="strip-csm-breakdown" style="flex:2;display:flex;justify-content:space-around;padding:0 16px"></div>
+      <div style="border-left:1px solid rgba(255,255,255,.07);padding-left:24px;text-align:right;min-width:160px">
+        <div style="font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--text-dim);margin-bottom:6px">Avg MRR / Account</div>
+        <div style="font-family:'Syne',sans-serif;font-size:28px;font-weight:800;color:var(--blue)" id="strip-avg-mrr">—</div>
+        <div style="font-size:10px;color:var(--text-dim);margin-top:4px" id="strip-mrr-range">Range: — to —</div>
+      </div>
+    </div>
+
     <!-- TWO COLUMN -->
     <div class="grid-2">
       <!-- Health Matrix -->
@@ -412,6 +427,18 @@ canvas{max-height:100%}
         <div id="port-warnings"></div>
       </div>
     </div>
+    <!-- MRR DISTRIBUTION + ACCOUNT COUNT SECTION -->
+    <div class="grid-2">
+      <div class="s-card">
+        <div class="s-card-title">MRR by CSM <span>Account count and revenue ownership</span></div>
+        <div id="port-mrr-by-csm"></div>
+      </div>
+      <div class="s-card">
+        <div class="s-card-title">Account MRR Distribution <span>Concentration bands</span></div>
+        <div id="port-mrr-distribution"></div>
+      </div>
+    </div>
+
     <div class="s-card">
       <div class="s-card-title">All Active Accounts — Scored View</div>
       <div class="t-wrap" id="port-accounts-table"></div>
@@ -1105,6 +1132,35 @@ function loadHub(){
       <div class="health-bar-val" style="color:${d.color}">${d.val}%</div>
     </div>`).join('');
 
+  // ── Portfolio MRR Strip (Hub) ──
+  const totalPortMrr2=active.reduce((s,a)=>s+(Number(a['Current MRR (₹)'])||0),0);
+  const mrrList2=active.map(a=>Number(a['Current MRR (₹)']||0)).filter(Boolean);
+  const avgPortMrr2=active.length?Math.round(totalPortMrr2/active.length):0;
+  const minMrr2=mrrList2.length?Math.min(...mrrList2):0;
+  const maxMrr2=mrrList2.length?Math.max(...mrrList2):0;
+  const sTotal=document.getElementById('strip-total-mrr');
+  const sCount=document.getElementById('strip-account-count');
+  const sAvg=document.getElementById('strip-avg-mrr');
+  const sRange=document.getElementById('strip-mrr-range');
+  const sCSM=document.getElementById('strip-csm-breakdown');
+  if(sTotal) sTotal.textContent=fmtMrrFull(totalPortMrr2);
+  if(sCount) sCount.textContent=active.length+' active accounts';
+  if(sAvg) sAvg.textContent=fmtMrr(avgPortMrr2);
+  if(sRange) sRange.textContent='Range: '+fmtMrr(minMrr2)+' – '+fmtMrr(maxMrr2);
+  if(sCSM){
+    const CSM_COLORS2=['var(--teal)','var(--gold)','var(--purple)','var(--blue)'];
+    sCSM.innerHTML=CSM_LIST.map((csm,i)=>{
+      const csmAccs2=active.filter(a=>(a['CSM']||a.csm)===csm);
+      const csmMrr2=csmAccs2.reduce((s,a)=>s+(Number(a['Current MRR (₹)'])||0),0);
+      const pct2=totalPortMrr2?Math.round(csmMrr2/totalPortMrr2*100):0;
+      return`<div style="text-align:center;padding:0 12px">
+        <div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800;color:${CSM_COLORS2[i]}">${fmtMrr(csmMrr2)}</div>
+        <div style="font-size:10px;color:var(--text-dim);margin-top:2px">${csm.split(' ')[0]}</div>
+        <div style="font-size:10px;color:${CSM_COLORS2[i]};font-weight:600">${csmAccs2.length}ac · ${pct2}%</div>
+      </div>`;
+    }).join('');
+  }
+
   // SKAM Trend chart
   const trend=buildSkamTrend(ops);
   destroyChart('hub-skam');
@@ -1164,6 +1220,50 @@ function loadPortfolio(){
       <div><div class="nrr-stat-label">Net Active MRR</div><div class="nrr-stat-val" style="color:${nrrColor}">${fmtMrr(activeMrr)}</div></div>
     </div>`;
 
+  // ── MRR Strip data ──
+  const activeMrrList=active.map(a=>Number(a['Current MRR (₹)']||0)).filter(Boolean);
+  const totalPortMrr=activeMrrList.reduce((s,v)=>s+v,0);
+  const avgPortMrr=active.length?Math.round(totalPortMrr/active.length):0;
+  const minMrr=activeMrrList.length?Math.min(...activeMrrList):0;
+  const maxMrr=activeMrrList.length?Math.max(...activeMrrList):0;
+
+  // Hub strip update (also runs from loadHub — reuse if available)
+  const stripTotal=document.getElementById('strip-total-mrr');
+  const stripCount=document.getElementById('strip-account-count');
+  const stripAvg=document.getElementById('strip-avg-mrr');
+  const stripRange=document.getElementById('strip-mrr-range');
+  const stripCSM=document.getElementById('strip-csm-breakdown');
+  if(stripTotal) stripTotal.textContent=fmtMrrFull(totalPortMrr);
+  if(stripCount) stripCount.textContent=active.length+' active accounts';
+  if(stripAvg) stripAvg.textContent=fmtMrr(avgPortMrr);
+  if(stripRange) stripRange.textContent='Range: '+fmtMrr(minMrr)+' – '+fmtMrr(maxMrr);
+  if(stripCSM){
+    const CSM_COLORS=['var(--teal)','var(--gold)','var(--purple)','var(--blue)'];
+    stripCSM.innerHTML=CSM_LIST.map((csm,i)=>{
+      const csmAccs=active.filter(a=>(a['CSM']||a.csm)===csm);
+      const csmMrr=csmAccs.reduce((s,a)=>s+(Number(a['Current MRR (₹)'])||0),0);
+      const pct=totalPortMrr?Math.round(csmMrr/totalPortMrr*100):0;
+      return`<div style="text-align:center;padding:0 12px">
+        <div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800;color:${CSM_COLORS[i]}">${fmtMrr(csmMrr)}</div>
+        <div style="font-size:10px;color:var(--text-dim);margin-top:2px">${csm.split(' ')[0]}</div>
+        <div style="font-size:10px;color:${CSM_COLORS[i]};font-weight:600">${csmAccs.length}ac · ${pct}%</div>
+      </div>`;
+    }).join('');
+  }
+
+  // ── Portfolio MRR Detail section ──
+  const mrrBands=[
+    {label:'Below ₹1L',min:0,max:100000,color:'var(--text-dim)'},
+    {label:'₹1L – ₹2L',min:100000,max:200000,color:'var(--blue)'},
+    {label:'₹2L – ₹4L',min:200000,max:400000,color:'var(--gold)'},
+    {label:'Above ₹4L',min:400000,max:Infinity,color:'var(--teal)'},
+  ];
+  const mrrByCSM={};
+  CSM_LIST.forEach(csm=>{
+    const csmAccs=active.filter(a=>(a['CSM']||a.csm)===csm);
+    mrrByCSM[csm]={accounts:csmAccs.length,mrr:csmAccs.reduce((s,a)=>s+(Number(a['Current MRR (₹)'])||0),0)};
+  });
+
   // SKAM trend
   const trend=buildSkamTrend(ops);
   destroyChart('port-skam');
@@ -1216,6 +1316,66 @@ function loadPortfolio(){
     wEl.innerHTML=warns.map(w=>`<div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border)"><span style="font-size:14px">${w.type==='decline'?'📉':'🕐'}</span><div style="flex:1"><div style="font-size:12px;font-weight:600;color:var(--text)">${w.acc}</div><div style="font-size:11px;color:var(--text-mid)">${w.reason}</div></div><span class="badge bg-amber" style="font-size:9px">${w.type==='decline'?'Declining':'Inactive'}</span></div>`).join('');
   } else {
     wEl.innerHTML='<div class="empty" style="padding:24px"><div class="empty-icon" style="font-size:24px">✅</div><p>No early warnings detected</p></div>';
+  }
+
+  // ── MRR by CSM panel ──
+  const mrrByCsmEl=document.getElementById('port-mrr-by-csm');
+  if(mrrByCsmEl){
+    const CSM_COLORS=['var(--teal)','var(--gold)','var(--purple)','var(--blue)'];
+    const totalActiveMrr=active.reduce((s,a)=>s+(Number(a['Current MRR (₹)'])||0),0);
+    mrrByCsmEl.innerHTML=CSM_LIST.map((csm,i)=>{
+      const csmAccs=active.filter(a=>(a['CSM']||a.csm)===csm);
+      const csmMrr=csmAccs.reduce((s,a)=>s+(Number(a['Current MRR (₹)'])||0),0);
+      const pct=totalActiveMrr?Math.round(csmMrr/totalActiveMrr*100):0;
+      const col=CSM_COLORS[i];
+      const initials=csm.split(' ').map(n=>n[0]).join('').substring(0,2).toUpperCase();
+      return`<div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--border)">
+        <div style="width:34px;height:34px;background:var(--navy);border:2px solid ${col};border-radius:8px;display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-size:11px;font-weight:700;color:${col};flex-shrink:0">${initials}</div>
+        <div style="flex:1">
+          <div style="font-size:12px;font-weight:600;color:var(--text)">${csm}</div>
+          <div style="font-size:10px;color:var(--text-dim);margin-top:2px">${csmAccs.length} accounts</div>
+          <div style="margin-top:5px;height:5px;background:rgba(255,255,255,.06);border-radius:3px;overflow:hidden">
+            <div style="height:100%;width:${pct}%;background:${col};border-radius:3px"></div>
+          </div>
+        </div>
+        <div style="text-align:right;min-width:80px">
+          <div style="font-family:'Syne',sans-serif;font-size:18px;font-weight:800;color:${col}">${fmtMrr(csmMrr)}</div>
+          <div style="font-size:10px;color:var(--text-dim)">${pct}% of total</div>
+        </div>
+      </div>`;
+    }).join('');
+  }
+
+  // ── MRR Distribution Bands ──
+  const mrrDistEl=document.getElementById('port-mrr-distribution');
+  if(mrrDistEl){
+    const bands=[
+      {label:'Below ₹1L (Micro)',min:0,max:100000,color:'var(--text-dim)'},
+      {label:'₹1L – ₹2L (Core)',min:100000,max:200000,color:'var(--blue)'},
+      {label:'₹2L – ₹4L (Growth)',min:200000,max:400000,color:'var(--gold)'},
+      {label:'Above ₹4L (Strategic)',min:400000,max:Infinity,color:'var(--teal)'},
+    ];
+    const totalMrrAll=active.reduce((s,a)=>s+(Number(a['Current MRR (₹)'])||0),0);
+    const maxBandCount=Math.max(...bands.map(b=>active.filter(a=>Number(a['Current MRR (₹)']||0)>=b.min&&Number(a['Current MRR (₹)']||0)<b.max).length),1);
+    mrrDistEl.innerHTML=`<div style="margin-bottom:12px;font-size:12px;color:var(--text-mid)">Total Active MRR: <strong style="color:var(--teal);font-family:'Syne',sans-serif;font-size:18px">${fmtMrrFull(totalMrrAll)}</strong> across <strong>${active.length}</strong> accounts</div>`+
+    bands.map(b=>{
+      const bandAccs=active.filter(a=>Number(a['Current MRR (₹)']||0)>=b.min&&Number(a['Current MRR (₹)']||0)<b.max);
+      const bandMrr=bandAccs.reduce((s,a)=>s+(Number(a['Current MRR (₹)'])||0),0);
+      const pct=maxBandCount?Math.round(bandAccs.length/maxBandCount*100):0;
+      const mrrPct=totalMrrAll?Math.round(bandMrr/totalMrrAll*100):0;
+      return`<div style="margin-bottom:12px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px">
+          <div style="font-size:11px;color:var(--text-mid)">${b.label}</div>
+          <div style="display:flex;gap:10px;align-items:center">
+            <span style="font-size:11px;font-weight:600;color:${b.color}">${bandAccs.length} acc</span>
+            <span style="font-size:10px;color:var(--text-dim)">${fmtMrr(bandMrr)} · ${mrrPct}%</span>
+          </div>
+        </div>
+        <div style="height:8px;background:rgba(255,255,255,.06);border-radius:4px;overflow:hidden">
+          <div style="height:100%;width:${pct}%;background:${b.color};border-radius:4px"></div>
+        </div>
+      </div>`;
+    }).join('');
   }
 
   // Accounts table
