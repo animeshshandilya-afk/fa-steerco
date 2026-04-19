@@ -447,6 +447,21 @@ canvas{max-height:100%}
       <div id="top-fires-list" style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px"></div>
     </div>
 
+    <!-- ══ MRR STRIP ══ -->
+    <div style="background:linear-gradient(135deg,rgba(0,212,140,0.07),rgba(78,144,255,0.05));border:1px solid rgba(0,212,140,0.14);border-radius:14px;padding:18px 26px;margin-bottom:20px;display:flex;align-items:center;gap:0;overflow:hidden" id="mrr-strip">
+      <div style="flex:1;border-right:1px solid rgba(255,255,255,.07);padding-right:24px">
+        <div style="font-size:9px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--text-dim);margin-bottom:6px">Total Portfolio MRR</div>
+        <div style="font-family:'Syne',sans-serif;font-size:34px;font-weight:800;color:var(--teal)" id="strip-total-mrr">—</div>
+        <div style="font-size:11px;color:var(--text-dim);margin-top:4px" id="strip-account-count">— active accounts</div>
+      </div>
+      <div id="strip-csm-breakdown" style="flex:2;display:flex;justify-content:space-around;padding:0 16px"></div>
+      <div style="border-left:1px solid rgba(255,255,255,.07);padding-left:24px;text-align:right;min-width:150px">
+        <div style="font-size:9px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--text-dim);margin-bottom:6px">Avg MRR / Account</div>
+        <div style="font-family:'Syne',sans-serif;font-size:26px;font-weight:800;color:var(--blue)" id="strip-avg-mrr">—</div>
+        <div style="font-size:10px;color:var(--text-dim);margin-top:4px" id="strip-mrr-range">Range: — to —</div>
+      </div>
+    </div>
+
     <!-- ══ METRICS ROW ══ -->
     <div class="grid-2" style="margin-bottom:16px">
       <div class="s-card">
@@ -585,7 +600,7 @@ canvas{max-height:100%}
     <div id="risk-overridden-section" style="margin-top:8px">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
         <div style="font-family:'Syne',sans-serif;font-size:12px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--amber)">⊘ De-Risked Accounts — AVP Override</div>
-        <span style="font-size:11px;color:var(--text-dim)">Risk flag suppressed by AVP judgement — CTAs active</span>
+        <span style="font-size:11px;color:var(--text-dim)">Override an account above using the <span style="color:var(--amber);font-weight:600">Override</span> button on any flagged row</span>
       </div>
       <div id="risk-overridden-list"></div>
     </div>
@@ -1277,6 +1292,37 @@ function loadHub(){
   document.getElementById('h-pipeline-sub').textContent=openPip.length+' open opportunities';
   setKpi('h-skam',avgSkam||'—','h-skam-delta','skam','','',false);
 
+  // ── MRR Strip ──
+  const activeMrr=active.reduce((s,a)=>s+(Number(a['Current MRR (₹)'])||0),0);
+  const pendingWon=pip.filter(p=>(p['Opportunity Stage']||p.stage)==='Closed Won'&&(p['MRR Updated']||p.mrrUpdated)!=='Yes').reduce((s,p)=>s+(Number(p['Potential MRR (₹)'])||0),0);
+  const totalMrr=activeMrr+pendingWon;
+  const mrrVals=active.map(a=>Number(a['Current MRR (₹)'])||0).filter(Boolean).sort((a,b)=>a-b);
+  const minMrr=mrrVals[0]||0;const maxMrr=mrrVals[mrrVals.length-1]||0;
+  const avgMrr=active.length?Math.round(totalMrr/active.length):0;
+  const stripEl=document.getElementById('strip-total-mrr');
+  const stripCount=document.getElementById('strip-account-count');
+  const stripAvg=document.getElementById('strip-avg-mrr');
+  const stripRange=document.getElementById('strip-mrr-range');
+  if(stripEl)stripEl.textContent=fmtMrrFull(totalMrr);
+  if(stripCount)stripCount.textContent=active.length+' active account'+(active.length!==1?'s':'')+' · excl. churned';
+  if(stripAvg)stripAvg.textContent=fmtMrrFull(avgMrr);
+  if(stripRange)stripRange.textContent='Range: '+fmtMrr(minMrr)+' – '+fmtMrr(maxMrr);
+  // CSM breakdown
+  const csmBreak=document.getElementById('strip-csm-breakdown');
+  if(csmBreak){
+    const csmMrr={};
+    CSM_LIST.forEach(csm=>{
+      const csmMrrVal=active.filter(a=>(a['CSM']||a.csm)===csm).reduce((s,a)=>s+(Number(a['Current MRR (₹)'])||0),0);
+      if(csmMrrVal>0)csmMrr[csm]=csmMrrVal;
+    });
+    csmBreak.innerHTML=Object.entries(csmMrr).map(([csm,mrr])=>`
+      <div style="text-align:center;padding:0 12px">
+        <div style="font-size:9px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--text-dim);margin-bottom:4px">${csm.split(' ')[0]}</div>
+        <div style="font-family:'Syne',sans-serif;font-size:18px;font-weight:800;color:var(--text)">${fmtMrr(mrr)}</div>
+        <div style="font-size:9px;color:var(--text-dim);margin-top:2px">${active.filter(a=>(a['CSM']||a.csm)===csm).length} accts</div>
+      </div>`).join('');
+  }
+
   // ── Top 3 Fires ──
   renderTopFires();
 
@@ -1685,7 +1731,7 @@ function loadRisk(){
       const cp=Number(o['Competitive Positioning']||o.cp||0);
       const ivClass={Planned:'bg-amber',InProgress:'bg-blue','In Progress':'bg-blue',Escalated:'bg-red',Resolved:'bg-teal'};
       const isOverridden=(S.riskOverrides||[]).some(ov=>ov.account===n);
-      return` style="cursor:pointer;${isOverridden?'opacity:.6;':''}" onclick="openRiskDrill('${n}')"><td><strong>${n}</strong>${isOverridden?'<span class=\"badge bg-amber\" style=\"font-size:8px;margin-left:6px\">Overridden</span>':''}</td><td><span style="font-family:'Syne',sans-serif;font-size:16px;font-weight:800;color:${sc>=70?'var(--teal)':sc>=50?'var(--amber)':'var(--red)'}">${sc}</span></td><td style="color:${vp<3?'var(--red)':'var(--text-mid)'};font-weight:${vp<3?700:400}">${vp}</td><td style="color:${es<3?'var(--red)':'var(--text-mid)'};font-weight:${es<3?700:400}">${es}</td><td style="color:${sd<3?'var(--red)':'var(--text-mid)'};font-weight:${sd<3?700:400}">${sd}</td><td style="color:${cp>2.5?'var(--red)':'var(--text-mid)'};font-weight:${cp>2.5?700:400}">${cp}</td><td><strong>${fmtMrrFull(mrr)}</strong></td><td style="color:${oPipMrr?'var(--gold)':'var(--text-dim)'}">${oPipMrr?fmtMrr(oPipMrr):'—'}</td><td style="font-size:11px">${accD?accD['CSM']||'—':'—'}</td><td>${ivn?`<span class="badge ${ivClass[ivn.status.replace(' ','')]||'bg-dim'}" style="font-size:9px">${ivn.status}</span>`:'<span style="color:var(--text-dim);font-size:11px">—</span>'}</td><td onclick="event.stopPropagation()" style="display:flex;gap:5px"><button class="btn btn-ghost btn-sm" onclick="openRiskDrill('${n}')">Detail</button>${isOverridden?'':'<button style=\"background:var(--amber-d);border:1px solid rgba(255,184,48,.3);color:var(--amber);font-size:9px;padding:3px 8px;border-radius:5px;font-family:\'DM Sans\',sans-serif;cursor:pointer\" onclick=\"event.stopPropagation();openRiskOverride(\'"+n+"\')\">Override</button>'}</td></tr>`;
+      return`<tr style="cursor:pointer;${isOverridden?'opacity:.6;':''}" onclick="openRiskDrill('${n}')"><td><strong>${n}</strong>${isOverridden?'<span class=\"badge bg-amber\" style=\"font-size:8px;margin-left:6px\">Overridden</span>':''}</td><td><span style="font-family:'Syne',sans-serif;font-size:16px;font-weight:800;color:${sc>=70?'var(--teal)':sc>=50?'var(--amber)':'var(--red)'}">${sc}</span></td><td style="color:${vp<3?'var(--red)':'var(--text-mid)'};font-weight:${vp<3?700:400}">${vp}</td><td style="color:${es<3?'var(--red)':'var(--text-mid)'};font-weight:${es<3?700:400}">${es}</td><td style="color:${sd<3?'var(--red)':'var(--text-mid)'};font-weight:${sd<3?700:400}">${sd}</td><td style="color:${cp>2.5?'var(--red)':'var(--text-mid)'};font-weight:${cp>2.5?700:400}">${cp}</td><td><strong>${fmtMrrFull(mrr)}</strong></td><td style="color:${oPipMrr?'var(--gold)':'var(--text-dim)'}">${oPipMrr?fmtMrr(oPipMrr):'—'}</td><td style="font-size:11px">${accD?accD['CSM']||'—':'—'}</td><td>${ivn?`<span class="badge ${ivClass[ivn.status.replace(' ','')]||'bg-dim'}" style="font-size:9px">${ivn.status}</span>`:'<span style="color:var(--text-dim);font-size:11px">—</span>'}</td><td onclick="event.stopPropagation()" style="display:flex;gap:5px"><button class="btn btn-ghost btn-sm" onclick="openRiskDrill('${n}')">Detail</button>${isOverridden?'':'<button style=\"background:var(--amber-d);border:1px solid rgba(255,184,48,.3);color:var(--amber);font-size:9px;padding:3px 8px;border-radius:5px;font-family:\'DM Sans\',sans-serif;cursor:pointer\" onclick=\"event.stopPropagation();openRiskOverride(\'"+n+"\')\">Override</button>'}</td></tr>`;
     }).join('')
   }</tbody></table>`;
 
@@ -1766,6 +1812,7 @@ function saveRiskOverride(){
   const ov={account,reason,cta,param:document.getElementById('ov-param').value,targetDate:document.getElementById('ov-target-date').value,createdAt:new Date().toISOString()};
   if(existing>=0)S.riskOverrides[existing]=ov;else S.riskOverrides.push(ov);
   saveS();closeModal('modal-risk-override');loadRisk();toast('Risk override saved');
+  setTimeout(()=>{const el=document.getElementById('risk-overridden-section');if(el)el.scrollIntoView({behavior:'smooth',block:'start'});},400);
 }
 
 function removeRiskOverride(name){
@@ -1780,12 +1827,11 @@ function renderRiskOverrides(ls,riskAcc){
   const ovRiskAccts=overrides.filter(ov=>{
     const o=ls[ov.account];return o&&(o['Risk Flag']||o.riskFlag)==='Yes';
   });
+  document.getElementById('risk-overridden-section').style.display='block';
   if(!ovRiskAccts.length){
-    el.innerHTML='<div style="font-size:12px;color:var(--text-dim);padding:12px 0">No overridden accounts — all risk flags are being tracked actively.</div>';
-    document.getElementById('risk-overridden-section').style.display='none';
+    el.innerHTML='<div style="font-size:12px;color:var(--text-dim);padding:14px 16px;background:rgba(255,255,255,.02);border-radius:8px;border:1px dashed var(--border)">No active overrides — use the <strong style="color:var(--amber)">Override</strong> button on any risk-flagged row above to de-risk an account with a mandatory rationale and call to action.</div>';
     return;
   }
-  document.getElementById('risk-overridden-section').style.display='block';
   const paramLabel={VP:'Value Perception',ES:'Executive Sponsorship',SD:'Solution Depth',CP:'Competitive Positioning',Multiple:'Multiple Parameters'};
   el.innerHTML=ovRiskAccts.map(ov=>{
     const o=ls[ov.account]||{};const accD=riskAcc.find(a=>(a['Company Name']||a.company)===ov.account);
@@ -1884,7 +1930,8 @@ function loadGrowth(){
     const l=lostPip.filter(p=>csmAccNames.includes(p['Account Name']||p.account)).length;
     const o2=openPip.filter(p=>csmAccNames.includes(p['Account Name']||p.account)).length;
     const openMrrCsm=openPip.filter(p=>csmAccNames.includes(p['Account Name']||p.account)).reduce((s,p)=>s+(Number(p['Potential MRR (₹)'])||0),0);
-    if(w+l+o2>0)csmData[csm]={won:w,lost:l,open:o2,openMrr:openMrrCsm,rate:w+l>0?Math.round(w/(w+l)*100):null,accounts:csmAccNames};
+    // Always include all CSMs — even if no pipeline yet (so Kanika shows)
+    csmData[csm]={won:w,lost:l,open:o2,openMrr:openMrrCsm,rate:w+l>0?Math.round(w/(w+l)*100):null,accounts:csmAccNames,acctCount:csmAccNames.length};
   });
   const csmEntries=Object.entries(csmData).sort((a,b)=>(b[1].rate||0)-(a[1].rate||0));
   csmConvEl.innerHTML=csmEntries.length?csmEntries.map(([name,d])=>`
