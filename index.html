@@ -469,7 +469,16 @@ canvas{max-height:100%}
         <button class="btn btn-ghost btn-sm" onclick="openInterventionModal()" style="margin-top:12px;width:100%">+ Log Intervention</button>
       </div>
     </div>
-    <div class="context-note" style="margin-top:4px">
+    <!-- OVERRIDDEN ACCOUNTS SECTION -->
+    <div id="risk-overridden-section" style="margin-top:8px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+        <div style="font-family:'Syne',sans-serif;font-size:12px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--amber)">⊘ De-Risked Accounts — AVP Override</div>
+        <span style="font-size:11px;color:var(--text-dim)">Risk flag suppressed by AVP judgement — CTAs active</span>
+      </div>
+      <div id="risk-overridden-list"></div>
+    </div>
+
+    <div class="context-note" style="margin-top:16px">
       <div class="context-note-label">✦ Risk Narrative</div>
       <textarea id="ctx-risk" placeholder="Key risk accounts to escalate, intervention plans, leadership asks…" oninput="saveCtx('risk',this.value)"></textarea>
     </div>
@@ -500,12 +509,19 @@ canvas{max-height:100%}
     </div>
     <div class="grid-2">
       <div class="s-card">
-        <div class="s-card-title">Conversion by Account Manager</div>
-        <div id="growth-am-conv"></div>
+        <div class="s-card-title">Conversion by CSM <span>Click to drill down</span></div>
+        <div id="growth-csm-conv"></div>
       </div>
       <div class="s-card">
-        <div class="s-card-title">Delay & Loss Reasons</div>
+        <div class="s-card-title">Delay & Loss Reasons <span>Click to drill down</span></div>
         <div id="growth-reasons"></div>
+      </div>
+    </div>
+    <div class="s-card">
+      <div class="s-card-title">Product-wise MRR Distribution <span>Open pipeline by module — click to drill down</span></div>
+      <div class="grid-2" style="margin-top:4px">
+        <div id="product-mrr-bars"></div>
+        <div class="chart-wrap-sm"><canvas id="chart-product-mrr"></canvas></div>
       </div>
     </div>
     <div class="context-note" style="margin-top:4px">
@@ -529,13 +545,24 @@ canvas{max-height:100%}
         <div id="review-compliance"></div>
       </div>
       <div class="s-card">
-        <div class="s-card-title">MBR / QBR Health Matrix</div>
+        <div class="s-card-title">MBR / QBR Health Matrix <span>Click badges to drill down</span></div>
+        <div style="display:flex;gap:8px;margin-bottom:12px">
+          <button class="btn btn-ghost btn-sm" onclick="openIndicatorDrill('mbr_overdue','')">MBR Overdue →</button>
+          <button class="btn btn-ghost btn-sm" onclick="openIndicatorDrill('qbr_overdue','')">QBR Overdue →</button>
+        </div>
         <div id="cadence-matrix"></div>
       </div>
     </div>
     <div class="grid-2">
       <div class="s-card">
-        <div class="s-card-title">SKAM Dimension Breakdown <span>Avg across portfolio</span></div>
+        <div class="s-card-title">SKAM Dimension Breakdown <span>Click any dimension to drill down</span></div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px">
+          <button class="btn btn-ghost btn-sm" onclick="openIndicatorDrill('skam_dim','RC')">RC →</button>
+          <button class="btn btn-ghost btn-sm" onclick="openIndicatorDrill('skam_dim','SD')">SD →</button>
+          <button class="btn btn-ghost btn-sm" onclick="openIndicatorDrill('skam_dim','CP')">CP →</button>
+          <button class="btn btn-ghost btn-sm" onclick="openIndicatorDrill('skam_dim','VP')">VP →</button>
+          <button class="btn btn-ghost btn-sm" onclick="openIndicatorDrill('skam_dim','ES')">ES →</button>
+        </div>
         <div id="dim-breakdown"></div>
       </div>
       <div class="s-card">
@@ -563,6 +590,13 @@ canvas{max-height:100%}
   <div class="page-body">
     <div class="grid-3" id="blocker-stats"></div>
     <div id="blocker-list"></div>
+    <!-- TECH / PRODUCT / STABILITY BOTTLENECK PANEL -->
+    <div id="tech-blocker-panel" style="margin-top:8px">
+      <div style="font-family:'Syne',sans-serif;font-size:12px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--red);margin-bottom:12px">⚡ System Bottlenecks — Tech · Product · Stability</div>
+      <div class="grid-3" id="system-blocker-kpis"></div>
+      <div id="system-blocker-list"></div>
+    </div>
+
     <div class="sep"></div>
     <div class="s-card-title" style="margin-bottom:12px;font-family:'Syne',sans-serif;font-size:12px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--text-dim)">Resolved Bottlenecks</div>
     <div id="blocker-resolved-list"></div>
@@ -658,6 +692,9 @@ canvas{max-height:100%}
         <select id="bl-type">
           <option value="Decision">Decision Needed</option><option value="Resource">Resource Required</option>
           <option value="Escalation">Escalation</option><option value="Process">Process Change</option>
+          <option value="Tech">Tech Bottleneck</option>
+          <option value="Product">Product Bottleneck</option>
+          <option value="Stability">Stability Bottleneck</option>
         </select>
       </div>
       <div class="field"><label>Impact Area</label>
@@ -678,6 +715,14 @@ canvas{max-height:100%}
     <div class="field"><label>The Ask — What Specifically is Needed</label><textarea id="bl-ask" placeholder="Be precise: a decision, a resource, a conversation, a timeline…"></textarea></div>
     <div class="field"><label>Revenue / Retention Impact</label><input type="text" id="bl-impact-val" placeholder="e.g. ₹50K MRR at risk, 2 deals stalled, 30-day delay…"></div>
     <input type="hidden" id="bl-edit-id">
+    <div class="field" id="bl-accounts-wrap">
+      <label>Impacted Accounts (comma-separated)</label>
+      <input type="text" id="bl-accounts" placeholder="e.g. Bambino, AO Smith, Suruchi Spices…">
+    </div>
+    <div class="field" id="bl-mrr-impact-wrap">
+      <label>Impacted MRR (₹)</label>
+      <input type="number" id="bl-mrr-impact" placeholder="Combined MRR at risk from this bottleneck…">
+    </div>
     <div class="modal-footer">
       <button class="btn btn-secondary" onclick="closeModal('modal-blocker')">Cancel</button>
       <button class="btn btn-primary" onclick="saveBlocker()">Log Bottleneck →</button>
@@ -741,6 +786,54 @@ canvas{max-height:100%}
   </div>
 </div>
 
+<!-- Risk Override Modal -->
+<div class="modal-overlay" id="modal-risk-override">
+  <div class="modal" style="width:580px">
+    <h2>Override Risk Flag</h2>
+    <div style="background:var(--amber-d);border:1px solid rgba(255,184,48,.25);border-radius:10px;padding:14px 16px;margin-bottom:18px">
+      <div style="font-size:11px;font-weight:700;color:var(--amber);letter-spacing:.08em;text-transform:uppercase;margin-bottom:6px">⚠ Risk Parameters Still Active</div>
+      <div style="font-size:12px;color:var(--text-mid)" id="override-risk-params">—</div>
+    </div>
+    <input type="hidden" id="ov-account">
+    <div class="field"><label>Account</label><input type="text" id="ov-account-display" readonly style="background:rgba(255,255,255,.03)"></div>
+    <div class="field">
+      <label>Why are you de-risking this account? *</label>
+      <textarea id="ov-reason" placeholder="Explain why this account should be removed from the active risk list despite the flag…" style="min-height:80px"></textarea>
+    </div>
+    <div class="field">
+      <label>Call to Action — how will you actually fix the at-risk parameter? *</label>
+      <textarea id="ov-cta" placeholder="Specific actions to improve VP / ES / SD / CP — who does what, by when…" style="min-height:80px"></textarea>
+    </div>
+    <div class="form-row">
+      <div class="field"><label>Primary Parameter Being Addressed</label>
+        <select id="ov-param">
+          <option value="VP">Value Perception (VP)</option>
+          <option value="ES">Executive Sponsorship (ES)</option>
+          <option value="SD">Solution Depth (SD)</option>
+          <option value="CP">Competitive Positioning (CP)</option>
+          <option value="Multiple">Multiple Parameters</option>
+        </select>
+      </div>
+      <div class="field"><label>Target Resolution Date</label>
+        <input type="date" id="ov-target-date">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('modal-risk-override')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveRiskOverride()">Save Override →</button>
+    </div>
+  </div>
+</div>
+
+<!-- Growth / Indicators Drill-down Modal -->
+<div class="modal-overlay" id="modal-drill">
+  <div class="modal" style="width:680px">
+    <h2 id="drill-title">Drill Down</h2>
+    <div id="drill-content"></div>
+    <div class="modal-footer"><button class="btn btn-secondary" onclick="closeModal('modal-drill')">Close</button></div>
+  </div>
+</div>
+
 <!-- AI Brief Modal -->
 <div class="modal-overlay" id="modal-brief">
   <div class="modal" style="width:700px">
@@ -778,6 +871,7 @@ const EMPTY_STATE = {
   blockers:[],
   wins:[],
   interventions:[],
+  riskOverrides:[],
   contextNotes:{},
 };
 
@@ -1286,7 +1380,8 @@ function loadRisk(){
       const sd=Number(o['Solution Depth']||o.sd||0);
       const cp=Number(o['Competitive Positioning']||o.cp||0);
       const ivClass={Planned:'bg-amber',InProgress:'bg-blue','In Progress':'bg-blue',Escalated:'bg-red',Resolved:'bg-teal'};
-      return`<tr style="cursor:pointer" onclick="openRiskDrill('${n}')"><td><strong>${n}</strong></td><td><span style="font-family:'Syne',sans-serif;font-size:16px;font-weight:800;color:${sc>=70?'var(--teal)':sc>=50?'var(--amber)':'var(--red)'}">${sc}</span></td><td style="color:${vp<3?'var(--red)':'var(--text-mid)'};font-weight:${vp<3?700:400}">${vp}</td><td style="color:${es<3?'var(--red)':'var(--text-mid)'};font-weight:${es<3?700:400}">${es}</td><td style="color:${sd<3?'var(--red)':'var(--text-mid)'};font-weight:${sd<3?700:400}">${sd}</td><td style="color:${cp>2.5?'var(--red)':'var(--text-mid)'};font-weight:${cp>2.5?700:400}">${cp}</td><td><strong>${fmtMrrFull(mrr)}</strong></td><td style="color:${oPipMrr?'var(--gold)':'var(--text-dim)'}">${oPipMrr?fmtMrr(oPipMrr):'—'}</td><td style="font-size:11px">${accD?accD['CSM']||'—':'—'}</td><td>${ivn?`<span class="badge ${ivClass[ivn.status.replace(' ','')]||'bg-dim'}" style="font-size:9px">${ivn.status}</span>`:'<span style="color:var(--text-dim);font-size:11px">—</span>'}</td><td onclick="event.stopPropagation()"><button class="btn btn-ghost btn-sm" onclick="openRiskDrill('${n}')">Detail →</button></td></tr>`;
+      const isOverridden=(S.riskOverrides||[]).some(ov=>ov.account===n);
+      return` style="cursor:pointer;${isOverridden?'opacity:.6;':''}" onclick="openRiskDrill('${n}')"><td><strong>${n}</strong>${isOverridden?'<span class=\"badge bg-amber\" style=\"font-size:8px;margin-left:6px\">Overridden</span>':''}</td><td><span style="font-family:'Syne',sans-serif;font-size:16px;font-weight:800;color:${sc>=70?'var(--teal)':sc>=50?'var(--amber)':'var(--red)'}">${sc}</span></td><td style="color:${vp<3?'var(--red)':'var(--text-mid)'};font-weight:${vp<3?700:400}">${vp}</td><td style="color:${es<3?'var(--red)':'var(--text-mid)'};font-weight:${es<3?700:400}">${es}</td><td style="color:${sd<3?'var(--red)':'var(--text-mid)'};font-weight:${sd<3?700:400}">${sd}</td><td style="color:${cp>2.5?'var(--red)':'var(--text-mid)'};font-weight:${cp>2.5?700:400}">${cp}</td><td><strong>${fmtMrrFull(mrr)}</strong></td><td style="color:${oPipMrr?'var(--gold)':'var(--text-dim)'}">${oPipMrr?fmtMrr(oPipMrr):'—'}</td><td style="font-size:11px">${accD?accD['CSM']||'—':'—'}</td><td>${ivn?`<span class="badge ${ivClass[ivn.status.replace(' ','')]||'bg-dim'}" style="font-size:9px">${ivn.status}</span>`:'<span style="color:var(--text-dim);font-size:11px">—</span>'}</td><td onclick="event.stopPropagation()" style="display:flex;gap:5px"><button class="btn btn-ghost btn-sm" onclick="openRiskDrill('${n}')">Detail</button>${isOverridden?'':'<button style=\"background:var(--amber-d);border:1px solid rgba(255,184,48,.3);color:var(--amber);font-size:9px;padding:3px 8px;border-radius:5px;font-family:\'DM Sans\',sans-serif;cursor:pointer\" onclick=\"event.stopPropagation();openRiskOverride(\'"+n+"\')\">Override</button>'}</td></tr>`;
     }).join('')
   }</tbody></table>`;
 
@@ -1297,6 +1392,9 @@ function loadRisk(){
     const vals=riskAcc.map(a=>Number(a['Current MRR (₹)'])||0).slice(0,8);
     charts['risk-mrr']=new Chart(document.getElementById('chart-risk-mrr'),{type:'bar',data:{labels,datasets:[{data:vals,backgroundColor:'rgba(255,71,87,0.6)',borderColor:'var(--red)',borderWidth:1,borderRadius:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{grid:{color:'rgba(255,255,255,0.04)'},ticks:{callback:v=>'₹'+(v/1000).toFixed(0)+'K',font:{size:10}}},x:{grid:{display:false},ticks:{font:{size:9}}}}}});
   }
+
+  // Render overridden accounts section
+  renderRiskOverrides(ls, riskAcc);
 
   // Intervention tracker
   const ivList=interventions.filter(iv=>riskNames.has(iv.account));
@@ -1330,6 +1428,90 @@ function openRiskDrill(name){
     ${meetings.length?`<div style="margin-bottom:14px"><div style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--text-dim);margin-bottom:8px">Recent Meetings</div>${meetings.map(m=>`<div style="padding:8px 0;border-bottom:1px solid var(--border);font-size:12px"><div style="display:flex;gap:8px;align-items:center"><span style="color:var(--text)">${m['Review Date']||'—'}</span><span class="badge bg-dim" style="font-size:9px">${m['Meeting Type']||'—'}</span></div><div style="color:var(--text-mid);margin-top:3px">${(m['Notes']||'').substring(0,120)}${(m['Notes']||'').length>120?'…':''}</div></div>`).join('')}</div>`:''}
     ${ivn?`<div style="background:var(--blue-d);border:1px solid rgba(74,158,255,.2);border-radius:8px;padding:14px"><div style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--blue);margin-bottom:6px">Active Intervention</div><div style="font-size:12px;color:var(--text);margin-bottom:6px">${ivn.plan||'—'}</div><div style="font-size:11px;color:var(--text-mid)">Owner: ${ivn.owner||'—'} · Status: ${ivn.status} · Due: ${ivn.date?formatDate(ivn.date):'—'}</div></div>`:`<div style="background:var(--red-d);border:1px solid rgba(255,71,87,.2);border-radius:8px;padding:12px;font-size:12px;color:var(--red)">⚠ No intervention logged for this account yet — <button class="btn btn-secondary btn-sm" onclick="closeModal('modal-risk-drill');openInterventionModalFor('${name}')">Log Now</button></div>`}`;
   openModal('modal-risk-drill');
+}
+
+// ── RISK OVERRIDE FUNCTIONS ──
+function openRiskOverride(name){
+  const ls=getLatestSkam(D.operational||[]);
+  const o=ls[name];if(!o)return;
+  const triggers=[];
+  if(Number(o['Value Perception']||o.vp||0)<3)triggers.push('VP='+Number(o['Value Perception']||o.vp||0)+' (threshold: ≥3)');
+  if(Number(o['Executive Sponsorship']||o.es||0)<3)triggers.push('ES='+Number(o['Executive Sponsorship']||o.es||0)+' (threshold: ≥3)');
+  if(Number(o['Solution Depth']||o.sd||0)<3)triggers.push('SD='+Number(o['Solution Depth']||o.sd||0)+' (threshold: ≥3)');
+  if(Number(o['Competitive Positioning']||o.cp||0)>2.5)triggers.push('CP='+Number(o['Competitive Positioning']||o.cp||0)+' (threshold: ≤2.5)');
+  document.getElementById('ov-account').value=name;
+  document.getElementById('ov-account-display').value=name;
+  document.getElementById('override-risk-params').textContent=triggers.join(' · ')||'No active triggers found';
+  // Pre-fill if already overridden
+  const existing=(S.riskOverrides||[]).find(ov=>ov.account===name);
+  document.getElementById('ov-reason').value=existing?existing.reason:'';
+  document.getElementById('ov-cta').value=existing?existing.cta:'';
+  document.getElementById('ov-param').value=existing?existing.param:'VP';
+  document.getElementById('ov-target-date').value=existing?existing.targetDate:'';
+  openModal('modal-risk-override');
+}
+
+function saveRiskOverride(){
+  const account=document.getElementById('ov-account').value;
+  const reason=document.getElementById('ov-reason').value.trim();
+  const cta=document.getElementById('ov-cta').value.trim();
+  if(!reason){toast('De-risk reason is mandatory','⚠');return;}
+  if(!cta){toast('Call to action is mandatory','⚠');return;}
+  if(!S.riskOverrides)S.riskOverrides=[];
+  const existing=S.riskOverrides.findIndex(ov=>ov.account===account);
+  const ov={account,reason,cta,param:document.getElementById('ov-param').value,targetDate:document.getElementById('ov-target-date').value,createdAt:new Date().toISOString()};
+  if(existing>=0)S.riskOverrides[existing]=ov;else S.riskOverrides.push(ov);
+  saveS();closeModal('modal-risk-override');loadRisk();toast('Risk override saved');
+}
+
+function removeRiskOverride(name){
+  if(!confirm('Remove override? This account will return to the active risk list.'))return;
+  S.riskOverrides=(S.riskOverrides||[]).filter(ov=>ov.account!==name);
+  saveS();loadRisk();toast('Override removed');
+}
+
+function renderRiskOverrides(ls,riskAcc){
+  const overrides=S.riskOverrides||[];
+  const el=document.getElementById('risk-overridden-list');
+  const ovRiskAccts=overrides.filter(ov=>{
+    const o=ls[ov.account];return o&&(o['Risk Flag']||o.riskFlag)==='Yes';
+  });
+  if(!ovRiskAccts.length){
+    el.innerHTML='<div style="font-size:12px;color:var(--text-dim);padding:12px 0">No overridden accounts — all risk flags are being tracked actively.</div>';
+    document.getElementById('risk-overridden-section').style.display='none';
+    return;
+  }
+  document.getElementById('risk-overridden-section').style.display='block';
+  const paramLabel={VP:'Value Perception',ES:'Executive Sponsorship',SD:'Solution Depth',CP:'Competitive Positioning',Multiple:'Multiple Parameters'};
+  el.innerHTML=ovRiskAccts.map(ov=>{
+    const o=ls[ov.account]||{};const accD=riskAcc.find(a=>(a['Company Name']||a.company)===ov.account);
+    const mrr=accD?Number(accD['Current MRR (₹)']||0):0;
+    const sc=Number(o['SKAM Score']||0);
+    return`<div style="background:var(--card2);border:1px solid var(--border);border-left:3px solid var(--amber);border-radius:10px;padding:16px;margin-bottom:10px">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:12px">
+        <div style="flex:1">
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px">
+            <strong style="font-size:14px;color:var(--text)">${ov.account}</strong>
+            <span class="badge bg-amber">SKAM ${sc}</span>
+            <span style="font-size:11px;color:var(--text-dim)">${fmtMrrFull(mrr)}</span>
+          </div>
+          <div style="font-size:11px;color:var(--amber);font-weight:600;margin-bottom:2px">Parameter: ${paramLabel[ov.param]||ov.param}</div>
+          ${ov.targetDate?`<div style="font-size:10px;color:var(--text-dim)">Target Resolution: ${formatDate(ov.targetDate)}</div>`:''}
+        </div>
+        <button onclick="removeRiskOverride('${ov.account}')" class="btn btn-danger btn-sm" style="font-size:10px;flex-shrink:0">Remove Override</button>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <div style="background:rgba(255,255,255,.03);border-radius:8px;padding:12px">
+          <div style="font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--amber);margin-bottom:6px">Why De-Risked</div>
+          <div style="font-size:12px;color:var(--text-mid);line-height:1.6">${ov.reason}</div>
+        </div>
+        <div style="background:rgba(0,201,167,.05);border:1px solid rgba(0,201,167,.15);border-radius:8px;padding:12px">
+          <div style="font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--teal);margin-bottom:6px">Call to Action</div>
+          <div style="font-size:12px;color:var(--text-mid);line-height:1.6">${ov.cta}</div>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
 }
 
 // ══════════════════════════════════════════════════════════
@@ -1366,11 +1548,12 @@ function loadGrowth(){
     const items=pip.filter(p=>(p['Opportunity Stage']||p.stage)===s);
     const mrr=items.reduce((sum,p)=>sum+(Number(p['Potential MRR (₹)'])||0),0);
     const pct=Math.max(items.length/maxCount*100,5);
-    return`<div class="funnel-bar">
+    return`<div class="funnel-bar" style="cursor:${items.length?'pointer':'default'}" onclick="${items.length?`openGrowthDrill('stage','${s}')`:''}">
       <div class="funnel-label">${s}</div>
       <div class="funnel-track"><div class="funnel-fill" style="width:${pct}%;background:${stageColors[s]||'rgba(255,255,255,.2)'}">${items.length>0?items.length:''}</div></div>
       <div class="funnel-count">${items.length} deal${items.length!==1?'s':''}</div>
       <div class="funnel-mrr">${mrr?fmtMrr(mrr):'—'}</div>
+      ${items.length?'<div style="font-size:9px;color:var(--text-dim)">→</div>':''}
     </div>`;}).join('');
 
   // Stage donut
@@ -1385,24 +1568,62 @@ function loadGrowth(){
   if(!openPip.length){tableEl.innerHTML='<div class="empty"><p>No open pipeline entries</p></div>';return;}
   tableEl.innerHTML=`<table><thead><tr><th>Account</th><th>AM</th><th>Type</th><th>Product</th><th>MRR</th><th>Stage</th><th>Close</th><th>Age</th></tr></thead><tbody>${openPip.sort((a,b)=>daysSince(a['Timestamp']||'')-daysSince(b['Timestamp']||'')).map(p=>{
     const age=daysSince(p['Timestamp']||'');const isStale=age>30;
-    return`<tr style="background:${isStale?'rgba(255,71,87,0.04)':''}"><td><strong>${p['Account Name']||p.account}</strong></td><td style="font-size:11px">${p['Account Manager']||p.am||'—'}</td><td><span class="badge bg-blue" style="font-size:9px">${p['Opportunity Type']||p.oppType||'—'}</span></td><td style="font-size:11px;max-width:100px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${p['Product/Modules']||p.products||'—'}</td><td style="font-weight:600;color:var(--gold)">${fmtMrrFull(Number(p['Potential MRR (₹)'])||0)}</td><td><span class="badge bg-dim" style="font-size:9px">${p['Opportunity Stage']||p.stage}</span></td><td style="font-size:11px">${p['Expected Close Date']||'—'}</td><td><span style="font-size:11px;color:${isStale?'var(--red)':'age'>=14?'var(--amber)':'var(--teal)'};font-weight:600">${age}d${isStale?' ⚠':''}</span></td></tr>`;
+    return`<tr style="background:${isStale?'rgba(255,71,87,0.04)':''}"><td style="cursor:pointer" onclick="openGrowthDrill('stage','${p['Opportunity Stage']||p.stage}')"><strong>${p['Account Name']||p.account}</strong></td><td style="font-size:11px">${p['Account Manager']||p.am||'—'}</td><td><span class="badge bg-blue" style="font-size:9px">${p['Opportunity Type']||p.oppType||'—'}</span></td><td style="font-size:11px;max-width:100px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${p['Product/Modules']||p.products||'—'}</td><td style="font-weight:600;color:var(--gold)">${fmtMrrFull(Number(p['Potential MRR (₹)'])||0)}</td><td><span class="badge bg-dim" style="font-size:9px">${p['Opportunity Stage']||p.stage}</span></td><td style="font-size:11px">${p['Expected Close Date']||'—'}</td><td><span style="font-size:11px;color:${isStale?'var(--red)':'age'>=14?'var(--amber)':'var(--teal)'};font-weight:600">${age}d${isStale?' ⚠':''}</span></td></tr>`;
   }).join('')}</tbody></table>`;
 
-  // AM Conversion
-  const amConvEl=document.getElementById('growth-am-conv');
-  const amData={};
-  AM_LIST.forEach(am=>{const w=wonPip.filter(p=>(p['Account Manager']||p.am)===am).length;const l=lostPip.filter(p=>(p['Account Manager']||p.am)===am).length;const o2=openPip.filter(p=>(p['Account Manager']||p.am)===am).length;if(w+l+o2>0)amData[am]={won:w,lost:l,open:o2,rate:w+l>0?Math.round(w/(w+l)*100):null};});
-  const amEntries=Object.entries(amData).sort((a,b)=>(b[1].rate||0)-(a[1].rate||0));
-  amConvEl.innerHTML=amEntries.length?amEntries.map(([name,d])=>`<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border)"><div style="flex:1"><div style="font-size:12px;font-weight:600;color:var(--text)">${name.split(' ')[0]}</div><div style="font-size:10px;color:var(--text-dim)">${d.won}W · ${d.lost}L · ${d.open} open</div></div>${d.rate!==null?`<div style="text-align:right"><div style="font-family:'Syne',sans-serif;font-size:18px;font-weight:800;color:${d.rate>=60?'var(--teal)':d.rate>=40?'var(--amber)':'var(--red)'}">${d.rate}%</div></div>`:'<span style="color:var(--text-dim);font-size:11px">—</span>'}</div>`).join(''):'<div class="empty" style="padding:20px"><p>No pipeline data</p></div>';
+  // CSM Conversion (Change 2 — CSM-only view)
+  const csmConvEl=document.getElementById('growth-csm-conv');
+  const csmData={};
+  CSM_LIST.forEach(csm=>{
+    const csmAccNames=acc.filter(a=>(a['CSM']||a.csm)===csm).map(a=>a['Company Name']||a.company);
+    const w=wonPip.filter(p=>csmAccNames.includes(p['Account Name']||p.account)).length;
+    const l=lostPip.filter(p=>csmAccNames.includes(p['Account Name']||p.account)).length;
+    const o2=openPip.filter(p=>csmAccNames.includes(p['Account Name']||p.account)).length;
+    const openMrrCsm=openPip.filter(p=>csmAccNames.includes(p['Account Name']||p.account)).reduce((s,p)=>s+(Number(p['Potential MRR (₹)'])||0),0);
+    if(w+l+o2>0)csmData[csm]={won:w,lost:l,open:o2,openMrr:openMrrCsm,rate:w+l>0?Math.round(w/(w+l)*100):null,accounts:csmAccNames};
+  });
+  const csmEntries=Object.entries(csmData).sort((a,b)=>(b[1].rate||0)-(a[1].rate||0));
+  csmConvEl.innerHTML=csmEntries.length?csmEntries.map(([name,d])=>`
+    <div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border);cursor:pointer" onclick="openGrowthDrill('csm','${name}')">
+      <div style="width:32px;height:32px;background:var(--navy);border-radius:8px;display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-size:11px;font-weight:700;color:var(--gold);flex-shrink:0">${name.split(' ').map(n=>n[0]).join('').substring(0,2)}</div>
+      <div style="flex:1"><div style="font-size:12px;font-weight:600;color:var(--text)">${name.split(' ')[0]}</div><div style="font-size:10px;color:var(--text-dim)">${d.won}W · ${d.lost}L · ${d.open} open · ${fmtMrr(d.openMrr)}</div></div>
+      <div style="text-align:right">${d.rate!==null?`<div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800;color:${d.rate>=60?'var(--teal)':d.rate>=40?'var(--amber)':'var(--red)'}">${d.rate}%</div>`:'<span style="color:var(--text-dim);font-size:11px">—</span>'}
+      <div style="font-size:9px;color:var(--text-dim)">drill down →</div></div>
+    </div>`).join(''):'<div class="empty" style="padding:20px"><p>No pipeline data</p></div>';
 
-  // Delay/Loss reasons
+  // Product-wise MRR Distribution (Change 3)
+  const productMrr={};
+  openPip.forEach(p=>{
+    const prods=(p['Product/Modules']||p.products||'Other').split(',').map(s=>s.trim()).filter(Boolean);
+    const perProd=(Number(p['Potential MRR (₹)'])||0)/prods.length;
+    prods.forEach(prod=>{productMrr[prod]=(productMrr[prod]||0)+perProd;});
+  });
+  const productEntries=Object.entries(productMrr).sort((a,b)=>b[1]-a[1]).slice(0,8);
+  const maxPMrr=productEntries.length?productEntries[0][1]:1;
+  const prodColors=['var(--teal)','var(--gold)','var(--blue)','var(--purple)','var(--amber)','var(--red)','#4ECDC4','#A8E6CF'];
+  const prodBarsEl=document.getElementById('product-mrr-bars');
+  prodBarsEl.innerHTML=productEntries.length?productEntries.map(([prod,mrr],i)=>`
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;cursor:pointer" onclick="openGrowthDrill('product','${prod.replace(/'/g,'&apos;')}')">
+      <div style="font-size:11px;color:var(--text-mid);width:110px;flex-shrink:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${prod}</div>
+      <div style="flex:1;height:8px;background:rgba(255,255,255,.06);border-radius:4px;overflow:hidden">
+        <div style="height:100%;border-radius:4px;background:${prodColors[i%prodColors.length]};width:${Math.round(mrr/maxPMrr*100)}%"></div>
+      </div>
+      <div style="font-size:11px;font-weight:600;color:${prodColors[i%prodColors.length]};width:55px;text-align:right">${fmtMrr(mrr)}</div>
+    </div>`).join(''):'<div class="empty" style="padding:12px"><p>No product data</p></div>';
+  // Product donut chart
+  destroyChart('product-mrr');
+  if(productEntries.length){
+    charts['product-mrr']=new Chart(document.getElementById('chart-product-mrr'),{type:'doughnut',data:{labels:productEntries.map(([p])=>p),datasets:[{data:productEntries.map(([,v])=>v),backgroundColor:prodColors.slice(0,productEntries.length),borderWidth:2,borderColor:'var(--card)'}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'right',labels:{font:{size:9},padding:6}}},cutout:'60%'}});
+  }
+
+  // Delay/Loss reasons with drill-down (Change 4)
   const reasonsEl=document.getElementById('growth-reasons');
   const delayReasons={};const lostReasons={};
   [...delayedPip,...wonPip.filter(p=>(p['MRR Status']||p.mrrStatus)==='Delayed MRR')].forEach(p=>{const r=p['Delay Reason']||p.delayReason||'Unknown';delayReasons[r]=(delayReasons[r]||0)+1;});
   lostPip.forEach(p=>{const r=p['Lost Reason']||p.lostReason||'Unknown';lostReasons[r]=(lostReasons[r]||0)+1;});
   let html='';
-  if(Object.keys(delayReasons).length){html+=`<div style="font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--amber);margin-bottom:8px">Delay Reasons</div>`+Object.entries(delayReasons).sort((a,b)=>b[1]-a[1]).map(([r,c])=>`<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border);font-size:12px"><span style="color:var(--text-mid)">${r}</span><span class="badge bg-amber">${c}</span></div>`).join('')+'<div class="sep"></div>';}
-  if(Object.keys(lostReasons).length){html+=`<div style="font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--red);margin-bottom:8px">Lost Reasons</div>`+Object.entries(lostReasons).sort((a,b)=>b[1]-a[1]).map(([r,c])=>`<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border);font-size:12px"><span style="color:var(--text-mid)">${r}</span><span class="badge bg-red">${c}</span></div>`).join('');}
+  if(Object.keys(delayReasons).length){html+=`<div style="font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--amber);margin-bottom:8px">Delay Reasons</div>`+Object.entries(delayReasons).sort((a,b)=>b[1]-a[1]).map(([r,cnt])=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid var(--border);cursor:pointer" onclick="openGrowthDrill('delay_reason','${r}')"><span style="font-size:12px;color:var(--text-mid)">${r}</span><div style="display:flex;align-items:center;gap:6px"><span class="badge bg-amber">${cnt}</span><span style="font-size:9px;color:var(--text-dim)">→</span></div></div>`).join('')+'<div class="sep"></div>';}
+  if(Object.keys(lostReasons).length){html+=`<div style="font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--red);margin-bottom:8px">Lost Reasons</div>`+Object.entries(lostReasons).sort((a,b)=>b[1]-a[1]).map(([r,cnt])=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid var(--border);cursor:pointer" onclick="openGrowthDrill('lost_reason','${r}')"><span style="font-size:12px;color:var(--text-mid)">${r}</span><div style="display:flex;align-items:center;gap:6px"><span class="badge bg-red">${cnt}</span><span style="font-size:9px;color:var(--text-dim)">→</span></div></div>`).join('');}
   reasonsEl.innerHTML=html||'<div class="empty" style="padding:20px"><p>No delay or loss data yet</p></div>';
 }
 
@@ -1441,11 +1662,12 @@ function loadIndicators(){
     const rate=csmAccs?Math.round(csmOps.length/csmAccs*100):0;
     return{csm,count:csmOps.length,total:csmAccs,rate};
   });
-  compEl.innerHTML=csmComp.map(c=>`<div class="health-bar-row">
+  compEl.innerHTML=csmComp.map(c=>`<div class="health-bar-row" style="cursor:pointer" onclick="openIndicatorDrill('csm_review','${c.csm}')">
     <div class="health-bar-label" style="width:140px">${c.csm.split(' ')[0]}</div>
     <div class="health-bar-track"><div class="health-bar-fill" style="width:${c.rate}%;background:${c.rate>=70?'var(--teal)':c.rate>=40?'var(--amber)':'var(--red)'}"></div></div>
     <div style="font-size:11px;color:var(--text-mid);width:60px;text-align:right">${c.count}/${c.total}</div>
     <div class="health-bar-val" style="color:${c.rate>=70?'var(--teal)':c.rate>=40?'var(--amber)':'var(--red)'};">${c.rate}%</div>
+    <div style="font-size:9px;color:var(--text-dim);margin-left:4px">→</div>
   </div>`).join('');
 
   // MBR/QBR matrix
@@ -1518,12 +1740,142 @@ function loadBottlenecks(){
     </div>`).join('');}
 
   const brEl=document.getElementById('blocker-resolved-list');
-  brEl.innerHTML=resolved.length?resolved.map(b=>`<div style="padding:12px;background:rgba(0,201,167,0.04);border:1px solid rgba(0,201,167,0.12);border-radius:8px;margin-bottom:8px;opacity:.7"><div style="display:flex;align-items:center;gap:8px"><span class="badge bg-teal" style="font-size:9px">✓ Resolved</span><span style="font-size:12px;color:var(--text-mid)">${b.title}</span><span style="font-size:10px;color:var(--text-dim);margin-left:auto">${b.resolvedAt?formatDate(b.resolvedAt):''}</span></div></div>`).join(''):'<div style="font-size:12px;color:var(--text-dim);padding:12px 0">No resolved bottlenecks yet</div>';
+  brEl.innerHTML=resolved.length?resolved.map(b=>`<div style="padding:12px;background:rgba(0,201,167,0.04);border:1px solid rgba(0,201,167,0.12);border-radius:8px;margin-bottom:8px;opacity:.7"><div style="display:flex;align-items:center;gap:8px"><span class="badge bg-teal" style="font-size:9px">✓ Resolved</span><span style="font-size:12px;color:var(--text-mid)">${b.title}</span>${b.type?`<span class="badge bg-dim" style="font-size:8px">${b.type}</span>`:''}${b.accounts?`<span style="font-size:10px;color:var(--text-dim)">${b.accounts}</span>`:''}<span style="font-size:10px;color:var(--text-dim);margin-left:auto">${b.resolvedAt?formatDate(b.resolvedAt):''}</span></div></div>`).join(''):'<div style="font-size:12px;color:var(--text-dim);padding:12px 0">No resolved bottlenecks yet</div>';
+
+  // System Bottlenecks Panel (Change 5)
+  renderSystemBlockers(all);
   updateBadges();
 }
 
+function renderSystemBlockers(all){
+  const systemTypes=['Tech','Product','Stability'];
+  const systemColors={Tech:'red',Product:'blue',Stability:'amber'};
+  const systemIcons={Tech:'⚡','Product':'📦',Stability:'🔧'};
+  const pip=D.pipeline||[];
+  const acc=D.accounts||[];
+
+  const systemBlockers=all.filter(b=>systemTypes.includes(b.type)&&!b.resolved);
+  const panel=document.getElementById('tech-blocker-panel');
+  if(!systemBlockers.length){
+    panel.style.display='none';return;
+  }
+  panel.style.display='block';
+
+  // KPI tiles per type
+  const kpiEl=document.getElementById('system-blocker-kpis');
+  kpiEl.innerHTML=systemTypes.map(t=>{
+    const typeBlockers=systemBlockers.filter(b=>b.type===t);
+    const totalMrr=typeBlockers.reduce((s,b)=>s+(Number(b.mrrImpact)||0),0);
+    const col=systemColors[t];
+    return`<div class="kpi-card ${col}" style="cursor:pointer" onclick="openSystemDrill('${t}')">
+      <div class="kpi-label">${t} Bottlenecks</div>
+      <div class="kpi-value ${col}" style="font-size:32px">${typeBlockers.length}</div>
+      <div class="kpi-sub">${totalMrr?'₹'+Number(totalMrr).toLocaleString('en-IN')+' MRR at risk':'No MRR logged'}</div>
+      <div class="kpi-trend" style="font-size:10px;opacity:.5">drill down →</div>
+    </div>`;
+  }).join('');
+
+  // System blocker cards grouped by type
+  const listEl=document.getElementById('system-blocker-list');
+  const typeColors={Tech:'var(--red)',Product:'var(--blue)',Stability:'var(--amber)'};
+  const typeClass={Tech:'anno-escalation',Product:'anno-process',Stability:'anno-resource'};
+  listEl.innerHTML=systemBlockers.sort((a,b)=>{
+    const order={High:0,Medium:1,Low:2};
+    return(order[a.impact]||1)-(order[b.impact]||1);
+  }).map(b=>{
+    const accounts=b.accounts?b.accounts.split(',').map(s=>s.trim()).filter(Boolean):[];
+    const mrr=Number(b.mrrImpact)||0;
+    const tc=typeColors[b.type]||'var(--text-dim)';
+    return`<div style="background:var(--card2);border:1px solid var(--border);border-left:3px solid ${tc};border-radius:12px;padding:16px;margin-bottom:10px">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:10px">
+        <div style="flex:1">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
+            <span class="badge ${typeClass[b.type]||'bg-dim'}">${b.type} Bottleneck</span>
+            <span style="font-size:11px;font-weight:700;color:${b.impact==='High'?'var(--red)':b.impact==='Medium'?'var(--amber)':'var(--text-dim)'}">${b.impact} Impact</span>
+          </div>
+          <div style="font-size:14px;font-weight:600;color:var(--text);margin-bottom:6px">${b.title}</div>
+          ${b.ask?`<div style="font-size:12px;color:var(--text-mid);padding:8px 12px;background:rgba(255,255,255,.03);border-radius:6px;border-left:2px solid var(--gold)"><span style="font-size:10px;font-weight:700;color:var(--gold);letter-spacing:.08em;text-transform:uppercase">Ask: </span>${b.ask}</div>`:''}
+        </div>
+        <div style="display:flex;flex-direction:column;gap:4px;flex-shrink:0">
+          <button class="btn btn-ghost btn-sm" style="font-size:10px" onclick="editBlocker('${b.id}')">Edit</button>
+          <button class="btn btn-teal btn-sm" style="font-size:10px" onclick="resolveBlocker('${b.id}')">✓ Resolve</button>
+          <button class="btn btn-danger btn-sm" style="font-size:10px" onclick="deleteBlocker('${b.id}')">✕</button>
+        </div>
+      </div>
+      ${accounts.length||mrr?`<div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding-top:10px;border-top:1px solid var(--border)">
+        ${mrr?`<div style="display:flex;align-items:center;gap:6px"><span style="font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--text-dim)">MRR at Risk:</span><span style="font-size:13px;font-weight:700;color:${tc}">₹${mrr.toLocaleString('en-IN')}</span></div>`:''}
+        ${accounts.length?`<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap"><span style="font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--text-dim)">Accounts:</span>${accounts.map(a=>`<span class="badge bg-dim" style="font-size:9px">${a}</span>`).join('')}</div>`:''}
+        ${accounts.length?`<button class="btn btn-ghost btn-sm" style="font-size:9px;margin-left:auto" onclick="openSystemDrill('${b.type}','${b.id}')">Account Impact →</button>`:''}
+      </div>`:''}
+    </div>`;
+  }).join('');
+}
+
+function openSystemDrill(type, blockerId){
+  const blockers=(S.blockers||[]).filter(b=>b.type===type&&!b.resolved);
+  const pip=D.pipeline||[];
+  const acc=D.accounts||[];
+  const ls=getLatestSkam(D.operational||[]);
+
+  let targetBlockers=blockerId?blockers.filter(b=>b.id===blockerId):blockers;
+  const typeColors={Tech:'var(--red)',Product:'var(--blue)',Stability:'var(--amber)'};
+  const tc=typeColors[type]||'var(--text-dim)';
+
+  // Collect all impacted accounts
+  const allAccounts=new Set();
+  let totalMrr=0;
+  targetBlockers.forEach(b=>{
+    if(b.accounts)b.accounts.split(',').map(s=>s.trim()).filter(Boolean).forEach(a=>allAccounts.add(a));
+    totalMrr+=Number(b.mrrImpact)||0;
+  });
+
+  // Build account impact table
+  const accImpact=Array.from(allAccounts).map(name=>{
+    const accD=acc.find(a=>(a['Company Name']||a.company)===name);
+    const skamData=ls[name];
+    const mrr=accD?Number(accD['Current MRR (₹)']||0):0;
+    const openPipMrr=(pip||[]).filter(p=>(p['Account Name']||p.account)===name&&!['Closed Won','Closed Lost'].includes(p['Opportunity Stage']||p.stage)).reduce((s,p)=>s+(Number(p['Potential MRR (₹)'])||0),0);
+    const skam=skamData?Number(skamData['SKAM Score']||0):null;
+    const risk=skamData?(skamData['Risk Flag']||skamData.riskFlag)==='Yes':false;
+    return{name,mrr,openPipMrr,skam,risk,accD};
+  }).sort((a,b)=>b.mrr-a.mrr);
+
+  const title=`${type} Bottleneck Impact${blockerId?' — Account View':'s — All '+type+' Blockers'}`;
+  document.getElementById('drill-title').textContent=title;
+  document.getElementById('drill-content').innerHTML=`
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px">
+      <div style="background:rgba(255,255,255,.04);border-radius:8px;padding:12px;text-align:center">
+        <div style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--text-dim);margin-bottom:4px">Open Blockers</div>
+        <div style="font-family:'Syne',sans-serif;font-size:24px;font-weight:800;color:${tc}">${targetBlockers.length}</div>
+      </div>
+      <div style="background:rgba(255,255,255,.04);border-radius:8px;padding:12px;text-align:center">
+        <div style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--text-dim);margin-bottom:4px">MRR at Risk</div>
+        <div style="font-family:'Syne',sans-serif;font-size:24px;font-weight:800;color:${tc}">${totalMrr?'₹'+totalMrr.toLocaleString('en-IN'):'—'}</div>
+      </div>
+      <div style="background:rgba(255,255,255,.04);border-radius:8px;padding:12px;text-align:center">
+        <div style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--text-dim);margin-bottom:4px">Impacted Accounts</div>
+        <div style="font-family:'Syne',sans-serif;font-size:24px;font-weight:800;color:${tc}">${allAccounts.size}</div>
+      </div>
+    </div>
+    ${accImpact.length?`<div style="font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--text-dim);margin-bottom:10px">Account-level Impact</div>
+    <div class="t-wrap"><table><thead><tr><th>Account</th><th>Current MRR</th><th>Open Pipeline</th><th>SKAM</th><th>Risk</th><th>CSM</th></tr></thead><tbody>${
+      accImpact.map(a=>`<tr><td><strong>${a.name}</strong></td><td style="font-weight:600">${fmtMrrFull(a.mrr)}</td><td style="color:${a.openPipMrr?'var(--gold)':'var(--text-dim)'}">${a.openPipMrr?fmtMrr(a.openPipMrr):'—'}</td><td>${a.skam!==null?`<span style="font-family:'Syne',sans-serif;font-weight:800;color:${a.skam>=70?'var(--teal)':a.skam>=50?'var(--amber)':'var(--red)'}">${a.skam}</span>`:'—'}</td><td>${a.risk?'<span class="badge bg-red" style="font-size:9px">⚠ Risk</span>':'<span class="badge bg-dim" style="font-size:9px">Clear</span>'}</td><td style="font-size:11px">${a.accD?a.accD['CSM']||'—':'—'}</td></tr>`)
+      .join('')
+    }</tbody></table></div>`:
+    `<div style="font-size:12px;color:var(--text-mid);padding:12px 0">No account names logged against this bottleneck. Edit it to add impacted accounts.</div>`}
+    <div class="sep"></div>
+    <div style="font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--text-dim);margin-bottom:10px">Bottleneck Detail</div>
+    ${targetBlockers.map(b=>`<div style="padding:12px;background:rgba(255,255,255,.03);border-radius:8px;margin-bottom:8px">
+      <div style="font-size:13px;font-weight:600;color:var(--text);margin-bottom:4px">${b.title}</div>
+      ${b.ask?`<div style="font-size:12px;color:var(--gold);margin-top:4px">Ask: ${b.ask}</div>`:''}
+      <div style="font-size:11px;color:var(--text-dim);margin-top:4px">Impact: ${b.impact} · Owner: ${b.owner||'—'}</div>
+    </div>`).join('')}
+  `;
+  openModal('modal-drill');
+}
+
 function openAddBlockerModal(){
-  ['bl-title','bl-ask','bl-impact-val','bl-owner'].forEach(id=>document.getElementById(id).value='');
+  ['bl-title','bl-ask','bl-impact-val','bl-owner','bl-accounts','bl-mrr-impact'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('bl-type').value='Decision';
   document.getElementById('bl-impact').value='High';
   document.getElementById('bl-impact-area').value='Revenue';
@@ -1539,6 +1891,8 @@ function editBlocker(id){
   document.getElementById('bl-type').value=b.type||'Decision';
   document.getElementById('bl-impact').value=b.impact||'High';
   document.getElementById('bl-impact-area').value=b.impactArea||'Revenue';
+  document.getElementById('bl-accounts').value=b.accounts||'';
+  document.getElementById('bl-mrr-impact').value=b.mrrImpact||'';
   document.getElementById('bl-edit-id').value=id;
   openModal('modal-blocker');
 }
@@ -1546,7 +1900,7 @@ function saveBlocker(){
   const title=document.getElementById('bl-title').value.trim();
   if(!title){toast('Please describe the bottleneck','⚠');return;}
   const editId=document.getElementById('bl-edit-id').value;
-  const b={id:editId||Date.now().toString(36),title,ask:document.getElementById('bl-ask').value,impactVal:document.getElementById('bl-impact-val').value,owner:document.getElementById('bl-owner').value,type:document.getElementById('bl-type').value,impact:document.getElementById('bl-impact').value,impactArea:document.getElementById('bl-impact-area').value,resolved:false,createdAt:editId?(S.blockers?.find(x=>x.id===editId)?.createdAt||new Date().toISOString()):new Date().toISOString()};
+  const b={id:editId||Date.now().toString(36),title,ask:document.getElementById('bl-ask').value,impactVal:document.getElementById('bl-impact-val').value,owner:document.getElementById('bl-owner').value,type:document.getElementById('bl-type').value,impact:document.getElementById('bl-impact').value,impactArea:document.getElementById('bl-impact-area').value,accounts:document.getElementById('bl-accounts').value,mrrImpact:document.getElementById('bl-mrr-impact').value,resolved:false,createdAt:editId?(S.blockers?.find(x=>x.id===editId)?.createdAt||new Date().toISOString()):new Date().toISOString()};
   if(editId){const i=(S.blockers||[]).findIndex(x=>x.id===editId);if(i>=0)S.blockers[i]=b;}
   else{if(!S.blockers)S.blockers=[];S.blockers.unshift(b);}
   saveS();closeModal('modal-blocker');loadBottlenecks();toast('Bottleneck logged');
@@ -1720,6 +2074,106 @@ Be specific with numbers. Be consultative, not reportorial. Write as if you are 
   document.getElementById('brief-prompt').textContent=prompt;
   openModal('modal-brief');
 }
+// ================================================================
+// GROWTH + INDICATORS DRILL-DOWN (Change 4)
+// ================================================================
+function openGrowthDrill(type, value){
+  const pip=D.pipeline||[];
+  const acc=D.accounts||[];
+  const ops=D.operational||[];
+  const ls=getLatestSkam(ops);
+  let title='', rows=[], totalMrr=0;
+
+  if(type==='csm'){
+    title='CSM Pipeline — '+value;
+    const csmAccNames=acc.filter(a=>(a['CSM']||a.csm)===value).map(a=>a['Company Name']||a.company);
+    const csmPip=pip.filter(p=>csmAccNames.includes(p['Account Name']||p.account)&&!['Closed Won','Closed Lost'].includes(p['Opportunity Stage']||p.stage));
+    totalMrr=csmPip.reduce((s,p)=>s+(Number(p['Potential MRR (₹)'])||0),0);
+    rows=csmPip.sort((a,b)=>daysSince(a['Timestamp']||'')-daysSince(b['Timestamp']||'')).map(p=>{
+      const age=daysSince(p['Timestamp']||'');
+      return`<tr><td><strong>${p['Account Name']||p.account}</strong></td><td><span class="badge bg-dim" style="font-size:9px">${p['Opportunity Stage']||p.stage}</span></td><td style="font-size:11px">${p['Product/Modules']||'—'}</td><td style="font-weight:600;color:var(--gold)">${fmtMrrFull(Number(p['Potential MRR (₹)'])||0)}</td><td><span style="font-size:11px;color:${age>30?'var(--red)':age>14?'var(--amber)':'var(--teal)'};font-weight:600">${age}d</span></td></tr>`;
+    });
+    document.getElementById('drill-title').textContent=title;
+    document.getElementById('drill-content').innerHTML=`<div style="font-size:13px;color:var(--text-mid);margin-bottom:14px">Open Pipeline: <strong style="color:var(--gold)">${fmtMrrFull(totalMrr)}</strong> across ${rows.length} deal${rows.length!==1?'s':''}</div>`+(rows.length?`<div class="t-wrap"><table><thead><tr><th>Account</th><th>Stage</th><th>Product</th><th>MRR</th><th>Age</th></tr></thead><tbody>${rows.join('')}</tbody></table></div>`:'<div class="empty"><p>No open pipeline for this CSM</p></div>');
+  } else if(type==='product'){
+    title='Product Drill-down — '+value;
+    const prodPip=pip.filter(p=>!['Closed Won','Closed Lost'].includes(p['Opportunity Stage']||p.stage)&&(p['Product/Modules']||p.products||'').includes(value));
+    totalMrr=prodPip.reduce((s,p)=>s+(Number(p['Potential MRR (₹)'])||0),0);
+    rows=prodPip.map(p=>`<tr><td><strong>${p['Account Name']||p.account}</strong></td><td><span class="badge bg-dim" style="font-size:9px">${p['Opportunity Stage']||p.stage}</span></td><td style="font-size:11px">${p['Account Manager']||p.am||'—'}</td><td style="font-weight:600;color:var(--gold)">${fmtMrrFull(Number(p['Potential MRR (₹)'])||0)}</td></tr>`);
+    document.getElementById('drill-title').textContent=title;
+    document.getElementById('drill-content').innerHTML=`<div style="font-size:13px;color:var(--text-mid);margin-bottom:14px">Open MRR: <strong style="color:var(--gold)">${fmtMrrFull(totalMrr)}</strong> · ${rows.length} deal${rows.length!==1?'s':''}</div>`+(rows.length?`<div class="t-wrap"><table><thead><tr><th>Account</th><th>Stage</th><th>AM</th><th>MRR</th></tr></thead><tbody>${rows.join('')}</tbody></table></div>`:'<div class="empty"><p>No deals for this product</p></div>');
+  } else if(type==='delay_reason'||type==='lost_reason'){
+    const isDelay=type==='delay_reason';
+    title=(isDelay?'Delay Reason: ':'Lost Reason: ')+value;
+    const filtered=isDelay?[...pip.filter(p=>(p['Opportunity Stage']||p.stage)==='Delayed Closure'&&(p['Delay Reason']||p.delayReason)===value),...pip.filter(p=>(p['MRR Status']||p.mrrStatus)==='Delayed MRR'&&(p['Delay Reason']||p.delayReason)===value)]:pip.filter(p=>(p['Opportunity Stage']||p.stage)==='Closed Lost'&&(p['Lost Reason']||p.lostReason)===value);
+    totalMrr=filtered.reduce((s,p)=>s+(Number(p['Potential MRR (₹)'])||0),0);
+    rows=filtered.map(p=>`<tr><td><strong>${p['Account Name']||p.account}</strong></td><td><span class="badge ${isDelay?'bg-amber':'bg-red'}" style="font-size:9px">${p['Opportunity Stage']||p.stage}</span></td><td style="font-size:11px">${p['Account Manager']||p.am||'—'}</td><td style="font-weight:600;color:${isDelay?'var(--amber)':'var(--red)'}">${fmtMrrFull(Number(p['Potential MRR (₹)'])||0)}</td></tr>`);
+    document.getElementById('drill-title').textContent=title;
+    document.getElementById('drill-content').innerHTML=`<div style="font-size:13px;color:var(--text-mid);margin-bottom:14px">MRR Impacted: <strong style="color:${isDelay?'var(--amber)':'var(--red)'}">${fmtMrrFull(totalMrr)}</strong> · ${rows.length} deal${rows.length!==1?'s':''}</div>`+(rows.length?`<div class="t-wrap"><table><thead><tr><th>Account</th><th>Stage</th><th>AM</th><th>MRR</th></tr></thead><tbody>${rows.join('')}</tbody></table></div>`:'<div class="empty"><p>No records</p></div>');
+  } else if(type==='stage'){
+    title='Pipeline Stage — '+value;
+    const stagePip=pip.filter(p=>(p['Opportunity Stage']||p.stage)===value);
+    totalMrr=stagePip.reduce((s,p)=>s+(Number(p['Potential MRR (₹)'])||0),0);
+    rows=stagePip.map(p=>{const age=daysSince(p['Timestamp']||'');return`<tr><td><strong>${p['Account Name']||p.account}</strong></td><td style="font-size:11px">${p['Product/Modules']||'—'}</td><td style="font-size:11px">${p['Account Manager']||p.am||'—'}</td><td style="font-weight:600;color:var(--gold)">${fmtMrrFull(Number(p['Potential MRR (₹)'])||0)}</td><td><span style="font-size:11px;color:${age>30?'var(--red)':age>14?'var(--amber)':'var(--teal)'}">${age}d</span></td></tr>`;});
+    document.getElementById('drill-title').textContent=title;
+    document.getElementById('drill-content').innerHTML=`<div style="font-size:13px;color:var(--text-mid);margin-bottom:14px">Total MRR: <strong style="color:var(--gold)">${fmtMrrFull(totalMrr)}</strong></div>`+(rows.length?`<div class="t-wrap"><table><thead><tr><th>Account</th><th>Product</th><th>AM</th><th>MRR</th><th>Age</th></tr></thead><tbody>${rows.join('')}</tbody></table></div>`:'<div class="empty"><p>No deals in this stage</p></div>');
+  }
+  openModal('modal-drill');
+}
+
+function openIndicatorDrill(type, value){
+  const acc=D.accounts||[];
+  const ops=D.operational||[];
+  const active=acc.filter(a=>(a['Account Status']||'Active')!=='Churned');
+  const ls=getLatestSkam(ops);
+  let title='', content='';
+
+  if(type==='csm_review'){
+    title='Review Activity — '+value;
+    const d30=new Date(Date.now()-30*86400000);
+    const csmOps=ops.filter(o=>(o['Reviewed By']||o.reviewer)===value&&new Date(o['Review Date']||'')>=d30);
+    const csmAccNames=active.filter(a=>(a['CSM']||a.csm)===value).map(a=>a['Company Name']||a.company);
+    const unreviewed=csmAccNames.filter(n=>!csmOps.find(o=>(o['Account Name']||o.account)===n));
+    content=`<div style="margin-bottom:16px"><div style="font-size:12px;font-weight:600;color:var(--teal);margin-bottom:8px">Reviewed (${csmOps.length})</div>`+
+      (csmOps.length?`<div class="t-wrap"><table><thead><tr><th>Account</th><th>Review Date</th><th>SKAM</th></tr></thead><tbody>${csmOps.map(o=>`<tr><td><strong>${o['Account Name']||o.account}</strong></td><td>${o['Review Date']||'—'}</td><td><span style="font-family:'Syne',sans-serif;font-weight:800;color:${Number(o['SKAM Score']||0)>=70?'var(--teal)':Number(o['SKAM Score']||0)>=50?'var(--amber)':'var(--red)'}">${o['SKAM Score']||'—'}</span></td></tr>`).join('')}</tbody></table></div>`:'<p style="font-size:12px;color:var(--text-dim)">None</p>')+
+      `</div><div><div style="font-size:12px;font-weight:600;color:var(--red);margin-bottom:8px">Not Yet Reviewed (${unreviewed.length})</div>`+
+      (unreviewed.length?`<div style="display:flex;flex-wrap:wrap;gap:6px">${unreviewed.map(n=>`<span class="badge bg-red" style="font-size:10px">${n}</span>`).join('')}</div>`:'<p style="font-size:12px;color:var(--text-dim)">All accounts reviewed</p>')+`</div>`;
+  } else if(type==='mbr_overdue'){
+    title='MBR Overdue Accounts';
+    const d45=new Date(Date.now()-45*86400000);
+    const rows=Object.entries(ls).filter(([n,o])=>{const mbr=o['Last MBR Date']||o.lastMbr;return !mbr||new Date(mbr)<d45;}).map(([n,o])=>{
+      const mbr=o['Last MBR Date']||o.lastMbr;const days=mbr?daysSince(mbr):999;
+      const accD=active.find(a=>(a['Company Name']||a.company)===n);
+      return`<tr><td><strong>${n}</strong></td><td>${accD?accD['CSM']||'—':'—'}</td><td style="color:${days>90?'var(--red)':'var(--amber)'};font-weight:600">${days===999?'Never':days+'d ago'}</td><td><span style="font-family:'Syne',sans-serif;font-weight:800;color:${Number(o['SKAM Score']||0)>=70?'var(--teal)':Number(o['SKAM Score']||0)>=50?'var(--amber)':'var(--red)'}">${o['SKAM Score']||'—'}</span></td></tr>`;
+    });
+    content=rows.length?`<div class="t-wrap"><table><thead><tr><th>Account</th><th>CSM</th><th>Last MBR</th><th>SKAM</th></tr></thead><tbody>${rows.join('')}</tbody></table></div>`:'<div class="empty"><p>All MBRs on track</p></div>';
+  } else if(type==='qbr_overdue'){
+    title='QBR Overdue Accounts';
+    const d90=new Date(Date.now()-90*86400000);
+    const rows=Object.entries(ls).filter(([n,o])=>{const qbr=o['Last QBR Date']||o.lastQbr;return !qbr||new Date(qbr)<d90;}).map(([n,o])=>{
+      const qbr=o['Last QBR Date']||o.lastQbr;const days=qbr?daysSince(qbr):999;
+      const accD=active.find(a=>(a['Company Name']||a.company)===n);
+      return`<tr><td><strong>${n}</strong></td><td>${accD?accD['CSM']||'—':'—'}</td><td style="color:${days>180?'var(--red)':'var(--amber)'};font-weight:600">${days===999?'Never':days+'d ago'}</td><td><span style="font-family:'Syne',sans-serif;font-weight:800;color:${Number(o['SKAM Score']||0)>=70?'var(--teal)':Number(o['SKAM Score']||0)>=50?'var(--amber)':'var(--red)'}">${o['SKAM Score']||'—'}</span></td></tr>`;
+    });
+    content=rows.length?`<div class="t-wrap"><table><thead><tr><th>Account</th><th>CSM</th><th>Last QBR</th><th>SKAM</th></tr></thead><tbody>${rows.join('')}</tbody></table></div>`:'<div class="empty"><p>All QBRs on track</p></div>';
+  } else if(type==='skam_dim'){
+    title='SKAM Dimension — '+value+' Breakdown';
+    const dimKey={RC:'Relationship Coverage',SD:'Solution Depth',CP:'Competitive Positioning',VP:'Value Perception',ES:'Executive Sponsorship'}[value]||value;
+    const threshold={RC:3,SD:3,VP:3,ES:3,CP:2.5}[value]||3;
+    const isInverted=value==='CP';
+    const rows=Object.entries(ls).map(([n,o])=>{
+      const val=Number(o[dimKey]||o[value.toLowerCase()]||0);
+      const isBad=isInverted?val>threshold:val<threshold;
+      return{n,val,isBad,score:Number(o['SKAM Score']||0)};
+    }).sort((a,b)=>a.val-b.val).map(({n,val,isBad,score})=>`<tr><td><strong>${n}</strong></td><td style="font-family:'Syne',sans-serif;font-size:16px;font-weight:800;color:${isBad?'var(--red)':'var(--teal)'}">${val}</td><td>${isBad?`<span class="badge bg-red" style="font-size:9px">Below threshold</span>`:`<span class="badge bg-teal" style="font-size:9px">OK</span>`}</td><td><span style="font-family:'Syne',sans-serif;font-weight:700;color:${score>=70?'var(--teal)':score>=50?'var(--amber)':'var(--red)'}">${score}</span></td></tr>`);
+    content=rows.length?`<div style="font-size:12px;color:var(--text-mid);margin-bottom:12px">Threshold: ${isInverted?'≤':'≥'}${threshold} (${isInverted?'lower is better':'higher is better'})</div><div class="t-wrap"><table><thead><tr><th>Account</th><th>${value}</th><th>Status</th><th>SKAM</th></tr></thead><tbody>${rows.join('')}</tbody></table></div>`:'<div class="empty"><p>No data</p></div>';
+  }
+  document.getElementById('drill-title').textContent=title;
+  document.getElementById('drill-content').innerHTML=content;
+  openModal('modal-drill');
+}
+
+
 function copyBrief(){
   const text=document.getElementById('brief-prompt').textContent;
   if(navigator.clipboard)navigator.clipboard.writeText(text).then(()=>toast('Prompt copied — paste in Claude.ai','✦'));
