@@ -916,7 +916,7 @@ function calcNRR(acc,churned,pip){
 function buildSkamTrend(ops){
   const byM={};(ops||[]).forEach(o=>{const mk=monthKey(o['Review Date']||o.reviewDate||o['Timestamp']||'');if(!mk)return;if(!byM[mk])byM[mk]=[];byM[mk].push(Number(o['SKAM Score']||o.skamScore)||0);});
   const months=Object.keys(byM).sort().slice(-6);
-  return{labels:months.map(m=>{const[y,mo]=m.split('-');return['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][parseInt(mo)-1]+'''+y.slice(2);}),data:months.map(m=>Math.round(byM[m].reduce((a,b)=>a+b)/byM[m].length))};
+  return{labels:months.map(m=>{const[y,mo]=m.split('-');return['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][parseInt(mo)-1]+"'"+y.slice(2);}),data:months.map(m=>Math.round(byM[m].reduce((a,b)=>a+b)/byM[m].length))};
 }
 function destroyChart(k){if(charts[k]){charts[k].destroy();delete charts[k];}}
 
