@@ -8,27 +8,45 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
 <style>
 :root {
-  --bg: #060E1C;
-  --surface: #0A1628;
-  --card: #0F1F36;
-  --card2: #132540;
-  --border: rgba(255,255,255,0.07);
-  --border-bright: rgba(255,255,255,0.14);
-  --text: #E8F0FF;
-  --text-mid: #7A95B5;
-  --text-dim: #3D5875;
-  --gold: #E8A838;
-  --gold-d: rgba(232,168,56,0.15);
-  --teal: #00C9A7;
-  --teal-d: rgba(0,201,167,0.12);
-  --red: #FF4757;
-  --red-d: rgba(255,71,87,0.12);
-  --amber: #FFB830;
-  --amber-d: rgba(255,184,48,0.12);
-  --blue: #4A9EFF;
-  --blue-d: rgba(74,158,255,0.12);
-  --purple: #9B7FFF;
-  --purple-d: rgba(155,127,255,0.12);
+  /* ── Backgrounds ─────────────────────────────── */
+  --bg: #07101E;          /* warm-tinted deep dark */
+  --surface: #0C1A2E;     /* slightly warmer surface */
+  --card: #111F36;        /* card background */
+  --card2: #152540;       /* elevated card */
+  --border: rgba(255,255,255,0.08);
+  --border-bright: rgba(255,255,255,0.16);
+
+  /* ── Typography ──────────────────────────────── */
+  --text: #F0F6FF;        /* slightly cooler white — crisp on warm bg */
+  --text-mid: #8AABCB;    /* mid — readable, not harsh */
+  --text-dim: #3E5A78;    /* dimmed context text */
+
+  /* ── Brand ───────────────────────────────────── */
+  --gold: #E8A838;        /* brand only: logo, nav, accents */
+  --gold-d: rgba(232,168,56,0.12);
+
+  /* ── 4 Semantic Signals ──────────────────────── */
+  /* GREEN: healthy / on track / go */
+  --teal: #00D48C;
+  --teal-d: rgba(0,212,140,0.11);
+
+  /* RED: action needed / decide now / critical */
+  --red: #FF3D55;
+  --red-d: rgba(255,61,85,0.12);
+
+  /* AMBER: watch / monitor / at risk */
+  --amber: #F6A623;
+  --amber-d: rgba(246,166,35,0.12);
+
+  /* BLUE: informational / pipeline / neutral data */
+  --blue: #4E90FF;
+  --blue-d: rgba(78,144,255,0.12);
+
+  /* INDIGO: contextual / secondary info (replaces purple) */
+  --purple: #6E8EFF;
+  --purple-d: rgba(110,142,255,0.11);
+
+  /* ── Layout ──────────────────────────────────── */
   --sidebar-w: 220px;
   --header-h: 64px;
 }
@@ -116,6 +134,43 @@ tr:hover td{background:rgba(255,255,255,0.02)}
 
 /* ── BADGES ── */
 .badge{display:inline-flex;align-items:center;padding:3px 10px;border-radius:20px;font-size:10px;font-weight:700;letter-spacing:.04em;white-space:nowrap}
+
+/* ── Improved card spacing ── */
+.page-body{padding:24px 32px}
+.s-card{padding:22px 24px;margin-bottom:18px}
+.kpi-card{padding:22px 20px}
+
+/* ── Typography scale ── */
+.kpi-value{font-family:'Syne',sans-serif;font-size:32px;font-weight:800;line-height:1;letter-spacing:-.01em}
+.s-card-title{font-size:11px;text-transform:uppercase;letter-spacing:.12em;font-weight:700;color:var(--text-dim);margin-bottom:18px;display:flex;align-items:center;justify-content:space-between}
+.s-card-title span{color:var(--text-dim);font-weight:400;font-size:10px;text-transform:none;letter-spacing:0}
+
+/* ── Scrollbar refinement ── */
+::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.1);border-radius:2px}
+::-webkit-scrollbar-thumb:hover{background:rgba(255,255,255,0.18)}
+
+/* ── Sidebar refinements ── */
+.sb-section-label{padding:12px 20px 3px;font-size:9px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:var(--text-dim)}
+.nav-item{padding:8px 20px;font-size:12px;border-left:2px solid transparent}
+.nav-item.active{background:rgba(232,168,56,0.08)}
+
+/* ── Form inputs on dark ── */
+.field input,.field select,.field textarea{
+  background:rgba(255,255,255,0.04);
+  color:var(--text)
+}
+.field input:focus,.field select:focus,.field textarea:focus{
+  border-color:var(--gold);
+  background:rgba(255,255,255,0.06);
+  box-shadow:0 0 0 3px rgba(232,168,56,0.08)
+}
+
+/* ── Button polish ── */
+.brief-btn{letter-spacing:.06em;border-radius:10px}
+.brief-btn:hover{transform:translateY(-1px);box-shadow:0 8px 24px rgba(232,168,56,.3)}
+
+/* ── Fire card glow animation ── */
+@keyframes fireGlow{0%,100%{box-shadow:0 0 20px rgba(255,61,85,0.12)}50%{box-shadow:0 0 32px rgba(255,61,85,0.22)}}
 .bg-teal{background:var(--teal-d);color:var(--teal);border:1px solid rgba(0,201,167,.2)}
 .bg-red{background:var(--red-d);color:var(--red);border:1px solid rgba(255,71,87,.2)}
 .bg-amber{background:var(--amber-d);color:var(--amber);border:1px solid rgba(255,184,48,.2)}
@@ -278,13 +333,13 @@ canvas{max-height:100%}
     <div class="sb-section-label">Command</div>
     <div class="nav-item active" onclick="showPage('hub',this)"><span class="nav-icon">⬡</span>SteerCo Hub</div>
     <div class="nav-item" onclick="showPage('portfolio',this)"><span class="nav-icon">◎</span>Portfolio Health</div>
-    <div class="sb-section-label">Execution</div>
-    <div class="nav-item" onclick="showPage('commitments',this)"><span class="nav-icon">✓</span>Commitments<span class="nav-badge" id="badge-commit" style="display:none">0</span></div>
-    <div class="nav-item" onclick="showPage('risk',this)"><span class="nav-icon">⚠</span>Risk Register</div>
-    <div class="nav-item" onclick="showPage('growth',this)"><span class="nav-icon">↑</span>Growth Engine</div>
-    <div class="sb-section-label">Intelligence</div>
-    <div class="nav-item" onclick="showPage('indicators',this)"><span class="nav-icon">◈</span>Leading Indicators</div>
+    <div class="sb-section-label">Decisions First</div>
     <div class="nav-item" onclick="showPage('bottlenecks',this)"><span class="nav-icon">⊘</span>Bottlenecks & Asks<span class="nav-badge" id="badge-blocks" style="display:none">0</span></div>
+    <div class="nav-item" onclick="showPage('risk',this)"><span class="nav-icon">⚠</span>Risk Register</div>
+    <div class="nav-item" onclick="showPage('commitments',this)"><span class="nav-icon">✓</span>Commitments<span class="nav-badge" id="badge-commit" style="display:none">0</span></div>
+    <div class="sb-section-label">Performance</div>
+    <div class="nav-item" onclick="showPage('growth',this)"><span class="nav-icon">↑</span>Growth Engine</div>
+    <div class="nav-item" onclick="showPage('indicators',this)"><span class="nav-icon">◈</span>Leading Indicators</div>
     <div class="nav-item" onclick="showPage('momentum',this)"><span class="nav-icon">★</span>Momentum</div>
   </nav>
   <div class="attendees-wrap">
@@ -316,85 +371,115 @@ canvas{max-height:100%}
       <button class="btn btn-primary btn-sm" onclick="generateBrief()">✦ Prepare AI Brief</button>
     </div>
   </div>
-  <div class="page-body">
-    <!-- KPI ROW -->
-    <div class="kpi-grid stagger" id="hub-kpis">
-      <div class="kpi-card gold clickable" onclick="showPage('portfolio',document.querySelector('.nav-item:nth-child(2)'))">
-        <div class="kpi-label">NRR</div>
-        <div class="kpi-value gold" id="h-nrr">—</div>
-        <div class="kpi-sub" id="h-nrr-sub">Portfolio retention</div>
-        <div class="kpi-trend">◎</div>
+  <div class="page-body" style="padding:20px 28px">
+
+    <!-- ══ NORTH STAR STRIP ══ -->
+    <div id="north-star-strip" style="border-radius:16px;padding:22px 28px;margin-bottom:22px;display:grid;grid-template-columns:auto 1px 1fr 1px auto 1px auto;gap:0;align-items:center;position:relative;overflow:hidden">
+      <!-- Status badge -->
+      <div style="padding-right:28px;min-width:200px">
+        <div style="font-size:9px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:rgba(255,255,255,.4);margin-bottom:8px">Portfolio Status</div>
+        <div id="ns-status-badge" style="display:inline-flex;align-items:center;gap:8px;padding:8px 16px;border-radius:30px;font-family:'Syne',sans-serif;font-size:14px;font-weight:800;letter-spacing:.06em">— —</div>
+        <div id="ns-status-rationale" style="font-size:11px;color:rgba(255,255,255,.5);margin-top:8px;max-width:180px;line-height:1.5">Computing…</div>
       </div>
-      <div class="kpi-card red clickable" onclick="showPage('risk',document.querySelectorAll('.nav-item')[4])">
-        <div class="kpi-label">MRR at Risk</div>
-        <div class="kpi-value red" id="h-risk-mrr">—</div>
-        <div class="kpi-sub" id="h-risk-sub">Accounts flagged</div>
-        <div class="kpi-trend">⚠</div>
+      <div style="width:1px;height:56px;background:rgba(255,255,255,.1);margin:0 24px"></div>
+      <!-- KPIs row -->
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:0">
+        <div style="padding:0 20px;border-right:1px solid rgba(255,255,255,.07)">
+          <div style="font-size:9px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:rgba(255,255,255,.4);margin-bottom:5px">NRR</div>
+          <div style="display:flex;align-items:baseline;gap:8px">
+            <div style="font-family:'Syne',sans-serif;font-size:28px;font-weight:800" id="h-nrr">—</div>
+            <div id="h-nrr-delta" style="font-size:11px;font-weight:600"></div>
+          </div>
+          <div style="font-size:10px;color:rgba(255,255,255,.4);margin-top:2px" id="h-nrr-sub">vs last session</div>
+        </div>
+        <div style="padding:0 20px;border-right:1px solid rgba(255,255,255,.07)">
+          <div style="font-size:9px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:rgba(255,255,255,.4);margin-bottom:5px">MRR at Risk</div>
+          <div style="display:flex;align-items:baseline;gap:8px">
+            <div style="font-family:'Syne',sans-serif;font-size:28px;font-weight:800" id="h-risk-mrr">—</div>
+            <div id="h-risk-delta" style="font-size:11px;font-weight:600"></div>
+          </div>
+          <div style="font-size:10px;color:rgba(255,255,255,.4);margin-top:2px" id="h-risk-sub">— accounts flagged</div>
+        </div>
+        <div style="padding:0 20px;border-right:1px solid rgba(255,255,255,.07)">
+          <div style="font-size:9px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:rgba(255,255,255,.4);margin-bottom:5px">Pipeline MRR</div>
+          <div style="display:flex;align-items:baseline;gap:8px">
+            <div style="font-family:'Syne',sans-serif;font-size:28px;font-weight:800" id="h-pipeline">—</div>
+            <div id="h-pipeline-delta" style="font-size:11px;font-weight:600"></div>
+          </div>
+          <div style="font-size:10px;color:rgba(255,255,255,.4);margin-top:2px" id="h-pipeline-sub">open opportunities</div>
+        </div>
+        <div style="padding:0 20px">
+          <div style="font-size:9px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:rgba(255,255,255,.4);margin-bottom:5px">Avg SKAM</div>
+          <div style="display:flex;align-items:baseline;gap:8px">
+            <div style="font-family:'Syne',sans-serif;font-size:28px;font-weight:800" id="h-skam">—</div>
+            <div id="h-skam-delta" style="font-size:11px;font-weight:600"></div>
+          </div>
+          <div style="font-size:10px;color:rgba(255,255,255,.4);margin-top:2px">portfolio health score</div>
+        </div>
       </div>
-      <div class="kpi-card blue clickable" onclick="showPage('growth',document.querySelectorAll('.nav-item')[5])">
-        <div class="kpi-label">Pipeline MRR</div>
-        <div class="kpi-value blue" id="h-pipeline">—</div>
-        <div class="kpi-sub" id="h-pipeline-sub">Open opportunities</div>
-        <div class="kpi-trend">↑</div>
+      <div style="width:1px;height:56px;background:rgba(255,255,255,.1);margin:0 24px"></div>
+      <!-- Delivery confidence -->
+      <div style="min-width:140px;text-align:center">
+        <div style="font-size:9px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:rgba(255,255,255,.4);margin-bottom:8px">Delivery Confidence</div>
+        <div id="ns-confidence" style="font-family:'Syne',sans-serif;font-size:18px;font-weight:800">—</div>
+        <div id="ns-conf-rationale" style="font-size:10px;color:rgba(255,255,255,.4);margin-top:4px;line-height:1.4;max-width:130px">Set in Session Settings</div>
       </div>
-      <div class="kpi-card amber">
-        <div class="kpi-label">Avg SKAM</div>
-        <div class="kpi-value amber" id="h-skam">—</div>
-        <div class="kpi-sub">Portfolio health score</div>
-        <div class="kpi-trend">◈</div>
-      </div>
-      <div class="kpi-card teal clickable" onclick="showPage('commitments',document.querySelectorAll('.nav-item')[3])">
-        <div class="kpi-label">Commitment Rate</div>
-        <div class="kpi-value teal" id="h-commit">—</div>
-        <div class="kpi-sub" id="h-commit-sub">From last session</div>
-        <div class="kpi-trend">✓</div>
+      <div style="width:1px;height:56px;background:rgba(255,255,255,.1);margin:0 24px"></div>
+      <!-- Session info -->
+      <div style="text-align:right;min-width:130px">
+        <div style="font-size:9px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:rgba(255,255,255,.4);margin-bottom:6px">Session</div>
+        <div style="font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:var(--gold)">#<span id="ns-session-num">—</span></div>
+        <div style="font-size:10px;color:rgba(255,255,255,.4);margin-top:3px" id="ns-session-date">—</div>
+        <button onclick="openSessionModal()" style="margin-top:8px;padding:4px 10px;background:rgba(232,168,56,.12);border:1px solid rgba(232,168,56,.25);border-radius:6px;font-family:'DM Sans',sans-serif;font-size:10px;font-weight:600;color:var(--gold);cursor:pointer">⚙ Settings</button>
       </div>
     </div>
 
-    <!-- PORTFOLIO MRR STRIP -->
-    <div style="background:linear-gradient(135deg,rgba(0,201,167,0.08),rgba(74,158,255,0.06));border:1px solid rgba(0,201,167,0.15);border-radius:14px;padding:18px 24px;margin-bottom:16px;display:flex;align-items:center;gap:0;overflow:hidden" id="mrr-strip">
-      <div style="flex:1;border-right:1px solid rgba(255,255,255,.07);padding-right:24px">
-        <div style="font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--text-dim);margin-bottom:6px">Total Portfolio MRR</div>
-        <div style="font-family:'Syne',sans-serif;font-size:38px;font-weight:800;color:var(--teal)" id="strip-total-mrr">—</div>
-        <div style="font-size:11px;color:var(--text-dim);margin-top:4px" id="strip-account-count">— active accounts</div>
+    <!-- ══ TOP 3 FIRES (Executive Attention Required) ══ -->
+    <div id="top-fires-section" style="margin-bottom:22px">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px">
+        <div style="width:4px;height:24px;background:var(--red);border-radius:2px"></div>
+        <div>
+          <div style="font-family:'Syne',sans-serif;font-size:14px;font-weight:800;color:var(--text);letter-spacing:.02em">Executive Attention Required</div>
+          <div style="font-size:11px;color:var(--text-dim);margin-top:1px" id="fires-insight">Items that require a decision or escalation today</div>
+        </div>
+        <span id="fires-count-badge" style="margin-left:auto;font-size:11px;font-weight:700;padding:3px 10px;background:var(--red-d);color:var(--red);border:1px solid rgba(255,61,85,.25);border-radius:12px"></span>
       </div>
-      <div id="strip-csm-breakdown" style="flex:2;display:flex;justify-content:space-around;padding:0 16px"></div>
-      <div style="border-left:1px solid rgba(255,255,255,.07);padding-left:24px;text-align:right;min-width:160px">
-        <div style="font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--text-dim);margin-bottom:6px">Avg MRR / Account</div>
-        <div style="font-family:'Syne',sans-serif;font-size:28px;font-weight:800;color:var(--blue)" id="strip-avg-mrr">—</div>
-        <div style="font-size:10px;color:var(--text-dim);margin-top:4px" id="strip-mrr-range">Range: — to —</div>
-      </div>
+      <div id="top-fires-list" style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px"></div>
     </div>
 
-    <!-- TWO COLUMN -->
-    <div class="grid-2">
-      <!-- Health Matrix -->
+    <!-- ══ METRICS ROW ══ -->
+    <div class="grid-2" style="margin-bottom:16px">
       <div class="s-card">
-        <div class="s-card-title">Portfolio Health Pulse</div>
+        <div class="s-card-title">Portfolio Health Pulse <span id="health-insight"></span></div>
         <div id="health-matrix"></div>
       </div>
-      <!-- SKAM mini trend -->
       <div class="s-card">
         <div class="s-card-title">SKAM Score Trend <span>Rolling 6 months</span></div>
         <div class="chart-wrap"><canvas id="chart-hub-skam"></canvas></div>
       </div>
     </div>
 
-    <!-- THREE COLUMN: Context + Warnings + Momentum -->
-    <div class="grid-3">
-      <div class="s-card" style="grid-column:1/3">
-        <div class="s-card-title">SteerCo Context Note <span>Your narrative for this session</span></div>
-        <div class="context-note">
-          <div class="context-note-label">✦ Agenda Context</div>
-          <textarea id="ctx-hub" placeholder="Add context, key talking points, or agenda notes for this SteerCo session…" oninput="saveCtx('hub',this.value)"></textarea>
-        </div>
+    <!-- ══ EARLY WARNINGS + MOMENTUM ══ -->
+    <div class="grid-2" style="margin-bottom:16px">
+      <div class="s-card">
+        <div class="s-card-title">Early Warnings <span id="warnings-insight"></span></div>
         <div id="hub-early-warnings"></div>
       </div>
       <div class="s-card">
-        <div class="s-card-title">Momentum Snapshot</div>
+        <div class="s-card-title">Momentum <span id="momentum-insight"></span></div>
         <div id="hub-momentum"></div>
       </div>
     </div>
+
+    <!-- ══ CONTEXT NOTE ══ -->
+    <div class="context-note" style="margin-bottom:0">
+      <div class="context-note-label">✦ Session Context & Agenda</div>
+      <textarea id="ctx-hub" placeholder="Key talking points, agenda notes, executive pre-read context for this session…" oninput="saveCtx('hub',this.value)" style="min-height:56px"></textarea>
+    </div>
+
+    <!-- Hidden element to hold legacy commit rate (needed by loadHub) -->
+    <div id="h-commit" style="display:none"></div>
+    <div id="h-commit-sub" style="display:none"></div>
   </div>
 </div>
 
@@ -664,6 +749,15 @@ canvas{max-height:100%}
     </div>
     <div class="field"><label>Next Session Date</label><input type="date" id="sess-next"></div>
     <div class="field"><label>Attendees (comma-separated)</label><input type="text" id="sess-attendees" placeholder="Varun, Chitransh, Saurabh, Animesh"></div>
+    <div class="field">
+      <label>Delivery Confidence</label>
+      <div style="display:flex;gap:8px;margin-top:4px">
+        <button type="button" id="conf-high" onclick="setConfidence('High')" style="flex:1;padding:9px;border-radius:8px;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:700;cursor:pointer;border:2px solid var(--border);background:transparent;color:var(--text-dim);transition:all .15s">High</button>
+        <button type="button" id="conf-med" onclick="setConfidence('Medium')" style="flex:1;padding:9px;border-radius:8px;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:700;cursor:pointer;border:2px solid var(--amber);background:var(--amber-d);color:var(--amber);transition:all .15s">Medium</button>
+        <button type="button" id="conf-low" onclick="setConfidence('Low')" style="flex:1;padding:9px;border-radius:8px;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:700;cursor:pointer;border:2px solid var(--border);background:transparent;color:var(--text-dim);transition:all .15s">Low</button>
+      </div>
+    </div>
+    <div class="field"><label>Confidence Rationale (shown on Hub)</label><input type="text" id="sess-conf-rationale" placeholder="Why this confidence level — visible to leadership…"></div>
     <div class="modal-footer">
       <button class="btn btn-secondary" onclick="closeModal('modal-session')">Cancel</button>
       <button class="btn btn-primary" onclick="saveSession()">Save Session →</button>
@@ -900,6 +994,8 @@ const EMPTY_STATE = {
   interventions:[],
   riskOverrides:[],
   contextNotes:{},
+  confidence:'Medium',
+  snapshot:{},
 };
 
 // ══════════════════════════════════════════════════════════
@@ -995,20 +1091,42 @@ function openSessionModal(){
   document.getElementById('sess-date').value=ss.date||new Date().toISOString().split('T')[0];
   document.getElementById('sess-next').value=ss.next||'';
   document.getElementById('sess-attendees').value=(ss.attendees||DEFAULT_ATTENDEES).join(', ');
+  const confEl=document.getElementById('sess-conf-rationale');
+  if(confEl)confEl.value=ss.confRationale||'';
+  // Set confidence button state
+  setConfidence(ss.confidence||S.confidence||'Medium');
   openModal('modal-session');
 }
 function saveSession(){
+  // Snapshot current KPI values before saving new session
+  const snap={};
+  const nrrEl=document.getElementById('h-nrr');
+  const riskEl=document.getElementById('h-risk-mrr');
+  const pipEl=document.getElementById('h-pipeline');
+  const skamEl=document.getElementById('h-skam');
+  if(nrrEl&&nrrEl.textContent!=='—')snap.nrr=parseFloat(nrrEl.textContent);
+  if(riskEl&&riskEl.textContent!=='—')snap.riskMrr=riskEl.textContent;
+  if(pipEl&&pipEl.textContent!=='—')snap.pipMrr=pipEl.textContent;
+  if(skamEl&&skamEl.textContent!=='—')snap.skam=parseFloat(skamEl.textContent);
+  snap.timestamp=new Date().toISOString();
+  if(Object.keys(snap).length>1)S.snapshot=snap;
+
+  const confidence=S.session?.confidence||S.confidence||'Medium';
   S.session={
     num:parseInt(document.getElementById('sess-num').value)||1,
     date:document.getElementById('sess-date').value,
     next:document.getElementById('sess-next').value,
     attendees:document.getElementById('sess-attendees').value.split(',').map(s=>s.trim()).filter(Boolean),
+    confidence,
+    confRationale:document.getElementById('sess-conf-rationale')?.value||'',
   };
+  S.confidence=confidence;
   saveS();
   updateSessionUI();
   populateAttendees();
   closeModal('modal-session');
-  toast('Session updated');
+  toast('Session saved');
+  loadHub();
 }
 function populateAttendees(){
   const el=document.getElementById('attendee-chips');
@@ -1089,27 +1207,80 @@ function loadHub(){
   const pipMrr=openPip.reduce((s,p)=>s+(Number(p['Potential MRR (₹)'])||0),0);
   const scArr=Object.values(ls).map(o=>Number(o['SKAM Score']||o.skamScore)).filter(Boolean);
   const avgSkam=scArr.length?Math.round(scArr.reduce((a,b)=>a+b)/scArr.length):0;
-  // Commitments rate
   const totalC=S.commitments?.length||0;
   const doneC=S.commitments?.filter(c=>c.status==='done').length||0;
   const commitRate=totalC>0?Math.round(doneC/totalC*100):100;
+  const snap=S.snapshot||{};
 
-  // Animate KPIs
-  setTimeout(()=>{
-    animateCounter(document.getElementById('h-nrr'),nrr||0,'%');
-    document.getElementById('h-nrr').style.color=!nrr?'var(--text-mid)':nrr>=100?'var(--teal)':nrr>=90?'var(--amber)':'var(--red)';
-    document.getElementById('h-risk-sub').textContent=riskOps.length+' account'+(riskOps.length!==1?'s':'')+' flagged';
-    animateCounter(document.getElementById('h-pipeline'),Math.round(pipMrr/1000),'K','₹');
-    document.getElementById('h-pipeline-sub').textContent=openPip.length+' open opportunities';
-    animateCounter(document.getElementById('h-skam'),avgSkam);
-    animateCounter(document.getElementById('h-commit'),commitRate,'%');
-    document.getElementById('h-commit-sub').textContent=doneC+' of '+totalC+' closed';
-  },100);
+  // ── Compute Portfolio Status ──
+  const portfolioStatus=computePortfolioStatus(nrr,riskOps.length,avgSkam,active.length,(S.blockers||[]).filter(b=>!b.resolved&&b.impact==='High').length);
 
-  // Risk MRR formatted
-  document.getElementById('h-risk-mrr').textContent=fmtMrr(riskMrr);
+  // ── North Star Strip ──
+  const statusColors={HEALTHY:['var(--teal)','rgba(0,212,140,0.15)','rgba(0,212,140,0.3)'],WATCH:['var(--amber)','rgba(246,166,35,0.15)','rgba(246,166,35,0.3)'],CRITICAL:['var(--red)','rgba(255,61,85,0.15)','rgba(255,61,85,0.3)']};
+  const [statusColor,statusBg,statusBorder]=statusColors[portfolioStatus.status]||statusColors.WATCH;
 
-  // Health matrix
+  // Style the North Star strip background based on status
+  const strip=document.getElementById('north-star-strip');
+  if(strip){
+    strip.style.background=`linear-gradient(135deg,${statusBg},rgba(255,255,255,0.02))`;
+    strip.style.border=`1px solid ${statusBorder}`;
+  }
+
+  // Status badge
+  const badge=document.getElementById('ns-status-badge');
+  if(badge){
+    const icons={HEALTHY:'●',WATCH:'◐',CRITICAL:'⊘'};
+    badge.textContent=`${icons[portfolioStatus.status]} ${portfolioStatus.status}`;
+    badge.style.background=statusBg;
+    badge.style.border=`1.5px solid ${statusBorder}`;
+    badge.style.color=statusColor;
+  }
+  const ratEl=document.getElementById('ns-status-rationale');
+  if(ratEl)ratEl.textContent=portfolioStatus.rationale;
+
+  // Session info
+  const sessNum=document.getElementById('ns-session-num');
+  const sessDate=document.getElementById('ns-session-date');
+  if(sessNum)sessNum.textContent=S.session?.num||'1';
+  if(sessDate)sessDate.textContent=S.session?.date?formatDate(S.session.date):'Today';
+
+  // Delivery confidence
+  const confEl=document.getElementById('ns-confidence');
+  const confRatEl=document.getElementById('ns-conf-rationale');
+  const conf=S.confidence||'Medium';
+  const confColors={High:'var(--teal)',Medium:'var(--amber)',Low:'var(--red)'};
+  if(confEl){confEl.textContent=conf;confEl.style.color=confColors[conf];}
+  if(confRatEl)confRatEl.textContent=S.session?.confRationale||'Set in Session Settings';
+
+  // KPI values with deltas
+  const setKpi=(id,val,deltaId,snapKey,suffix,prefix,invert)=>{
+    const el=document.getElementById(id);if(el){el.textContent=(prefix||'')+val+(suffix||'');el.style.color=id==='h-risk-mrr'?'var(--red)':id==='h-pipeline'?'var(--blue)':id==='h-skam'?'var(--amber)':'var(--teal)';}
+    if(deltaId&&snap[snapKey]!==undefined){
+      const prev=snap[snapKey];const curr=typeof val==='string'?parseFloat(val.replace(/[^0-9.-]/g,'')):val;
+      const diff=parseFloat((curr-prev).toFixed(1));
+      const deltaEl=document.getElementById(deltaId);
+      if(deltaEl&&diff!==0){
+        const isGood=invert?(diff<0):(diff>0);
+        deltaEl.textContent=(diff>0?'↑':diff<0?'↓':'→')+Math.abs(diff)+(suffix||'');
+        deltaEl.style.color=isGood?'var(--teal)':'var(--red)';
+      } else if(deltaEl){deltaEl.textContent='';}
+    }
+  };
+
+  setKpi('h-nrr',nrr!==null?nrr:'—','h-nrr-delta','nrr','%','',false);
+  const nrrEl=document.getElementById('h-nrr');
+  if(nrrEl&&nrr!==null)nrrEl.style.color=nrr>=100?'var(--teal)':nrr>=90?'var(--amber)':'var(--red)';
+  document.getElementById('h-nrr-sub').textContent=nrr===null?'Need data':nrr>=100?'Growing':'Below 100% target';
+  setKpi('h-risk-mrr',fmtMrr(riskMrr),'h-risk-delta','riskMrr','','',true);
+  document.getElementById('h-risk-sub').textContent=riskOps.length+' account'+(riskOps.length!==1?'s':'')+' flagged';
+  setKpi('h-pipeline',fmtMrr(pipMrr),'h-pipeline-delta','pipMrr','','',false);
+  document.getElementById('h-pipeline-sub').textContent=openPip.length+' open opportunities';
+  setKpi('h-skam',avgSkam||'—','h-skam-delta','skam','','',false);
+
+  // ── Top 3 Fires ──
+  renderTopFires();
+
+  // ── Health Matrix ──
   const now=new Date();
   const d30=new Date(now-30*86400000);
   const reviewed30=Object.values(ls).filter(o=>new Date(o['Review Date']||'')>=d30).length;
@@ -1117,13 +1288,12 @@ function loadHub(){
   const highGrowth=Object.values(ls).filter(o=>(o['Growth Flag']||o.growthFlag)==='High').length;
   const onTrackPip=openPip.filter(p=>daysSince(p['Timestamp']||'')<30).length;
   const pipAgeScore=openPip.length?Math.round(onTrackPip/openPip.length*100):100;
-
   const dims=[
-    {label:'Account Review Rate (30d)',val:reviewPct,color:'var(--teal)'},
+    {label:'Review Compliance (30d)',val:reviewPct,color:reviewPct>=70?'var(--teal)':reviewPct>=40?'var(--amber)':'var(--red)'},
     {label:'Risk-Free Accounts',val:active.length?Math.round((active.length-riskOps.length)/active.length*100):100,color:'var(--blue)'},
-    {label:'Pipeline Freshness',val:pipAgeScore,color:'var(--gold)'},
-    {label:'SKAM Health (≥70)',val:scArr.length?Math.round(scArr.filter(s=>s>=70).length/scArr.length*100):0,color:'var(--teal)'},
-    {label:'Growth Potential (High+Mid)',val:Object.values(ls).length?Math.round((highGrowth+Object.values(ls).filter(o=>(o['Growth Flag']||o.growthFlag)==='Medium').length)/Object.values(ls).length*100):0,color:'var(--purple)'},
+    {label:'Pipeline Freshness',val:pipAgeScore,color:pipAgeScore>=70?'var(--teal)':pipAgeScore>=40?'var(--amber)':'var(--red)'},
+    {label:'SKAM Health (≥70)',val:scArr.length?Math.round(scArr.filter(s=>s>=70).length/scArr.length*100):0,color:scArr.filter(s=>s>=70).length/Math.max(scArr.length,1)>=0.6?'var(--teal)':'var(--amber)'},
+    {label:'Pipeline vs Target',val:openPip.length?Math.min(100,Math.round(pipMrr/5000000*100)):0,color:'var(--purple)'},
   ];
   document.getElementById('health-matrix').innerHTML=dims.map(d=>`
     <div class="health-bar-row">
@@ -1132,62 +1302,36 @@ function loadHub(){
       <div class="health-bar-val" style="color:${d.color}">${d.val}%</div>
     </div>`).join('');
 
-  // ── Portfolio MRR Strip (Hub) ──
-  const totalPortMrr2=active.reduce((s,a)=>s+(Number(a['Current MRR (₹)'])||0),0);
-  const mrrList2=active.map(a=>Number(a['Current MRR (₹)']||0)).filter(Boolean);
-  const avgPortMrr2=active.length?Math.round(totalPortMrr2/active.length):0;
-  const minMrr2=mrrList2.length?Math.min(...mrrList2):0;
-  const maxMrr2=mrrList2.length?Math.max(...mrrList2):0;
-  const sTotal=document.getElementById('strip-total-mrr');
-  const sCount=document.getElementById('strip-account-count');
-  const sAvg=document.getElementById('strip-avg-mrr');
-  const sRange=document.getElementById('strip-mrr-range');
-  const sCSM=document.getElementById('strip-csm-breakdown');
-  if(sTotal) sTotal.textContent=fmtMrrFull(totalPortMrr2);
-  if(sCount) sCount.textContent=active.length+' active accounts';
-  if(sAvg) sAvg.textContent=fmtMrr(avgPortMrr2);
-  if(sRange) sRange.textContent='Range: '+fmtMrr(minMrr2)+' – '+fmtMrr(maxMrr2);
-  if(sCSM){
-    const CSM_COLORS2=['var(--teal)','var(--gold)','var(--purple)','var(--blue)'];
-    sCSM.innerHTML=CSM_LIST.map((csm,i)=>{
-      const csmAccs2=active.filter(a=>(a['CSM']||a.csm)===csm);
-      const csmMrr2=csmAccs2.reduce((s,a)=>s+(Number(a['Current MRR (₹)'])||0),0);
-      const pct2=totalPortMrr2?Math.round(csmMrr2/totalPortMrr2*100):0;
-      return`<div style="text-align:center;padding:0 12px">
-        <div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800;color:${CSM_COLORS2[i]}">${fmtMrr(csmMrr2)}</div>
-        <div style="font-size:10px;color:var(--text-dim);margin-top:2px">${csm.split(' ')[0]}</div>
-        <div style="font-size:10px;color:${CSM_COLORS2[i]};font-weight:600">${csmAccs2.length}ac · ${pct2}%</div>
-      </div>`;
-    }).join('');
-  }
+  // Insight lines
+  const healthInsight=reviewPct<50?`${100-reviewPct}% of accounts unreviewed this month`:`${reviewed30} accounts reviewed this cycle`;
+  const hInsEl=document.getElementById('health-insight');
+  if(hInsEl)hInsEl.textContent=healthInsight;
 
-  // SKAM Trend chart
+  // ── SKAM Trend ──
   const trend=buildSkamTrend(ops);
   destroyChart('hub-skam');
   if(trend.labels.length>=2){
-    const c=document.getElementById('chart-hub-skam');
-    charts['hub-skam']=new Chart(c,{type:'line',data:{labels:trend.labels,datasets:[{label:'Avg SKAM',data:trend.data,borderColor:'var(--gold)',backgroundColor:'rgba(232,168,56,0.08)',tension:.4,fill:true,pointRadius:4,pointBackgroundColor:'var(--gold)'}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{min:0,max:100,grid:{color:'rgba(255,255,255,0.04)'},ticks:{font:{size:10}}},x:{grid:{display:false},ticks:{font:{size:10}}}}}});
+    const ctx=document.getElementById('chart-hub-skam');
+    charts['hub-skam']=new Chart(ctx,{type:'line',data:{labels:trend.labels,datasets:[{label:'Avg SKAM',data:trend.data,borderColor:'var(--gold)',backgroundColor:'rgba(232,168,56,0.08)',tension:.4,fill:true,pointRadius:4,pointBackgroundColor:'var(--gold)'},{label:'Target (70)',data:trend.labels.map(()=>70),borderColor:'rgba(0,212,140,0.3)',borderDash:[4,4],pointRadius:0,fill:false,borderWidth:1.5}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{min:40,max:100,grid:{color:'rgba(255,255,255,0.04)'},ticks:{font:{size:10}}},x:{grid:{display:false},ticks:{font:{size:10}}}}}});
   }
 
-  // Early warnings
+  // ── Early Warnings ──
   const warnings=getEarlyWarnings(ops);
   const wEl=document.getElementById('hub-early-warnings');
+  const wInsEl=document.getElementById('warnings-insight');
+  if(wInsEl)wInsEl.textContent=warnings.length?`${warnings.length} signal${warnings.length!==1?'s':''} detected`:'All accounts stable';
   if(warnings.length){
-    wEl.innerHTML=`<div style="margin-top:14px"><div style="font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--amber);margin-bottom:10px">⚡ Early Warning Signals</div>`+
-    warnings.map(w=>`<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border)"><span style="font-size:13px">${w.type==='decline'?'📉':'🕐'}</span><div style="flex:1"><div style="font-size:12px;font-weight:600;color:var(--text)">${w.acc}</div><div style="font-size:11px;color:var(--text-mid)">${w.reason}</div></div><span class="badge bg-amber" style="font-size:9px">${w.type==='decline'?'Declining':'Stale'}</span></div>`).join('')+'</div>';
-  } else {wEl.innerHTML='';}
+    wEl.innerHTML=warnings.map(w=>`<div style="display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--border)"><span style="font-size:13px">${w.type==='decline'?'📉':'🕐'}</span><div style="flex:1"><div style="font-size:12px;font-weight:600;color:var(--text)">${w.acc}</div><div style="font-size:11px;color:var(--text-mid)">${w.reason}</div></div><span class="badge bg-${w.type==='decline'?'red':'amber'}" style="font-size:9px">${w.type==='decline'?'Declining':'Stale'}</span></div>`).join('');
+  } else {wEl.innerHTML='<div style="padding:16px 0;text-align:center;font-size:12px;color:var(--text-dim)">No early warnings — all accounts stable</div>';}
 
-  // Momentum snapshot
+  // ── Momentum ──
+  const wins=(S.wins||[]).slice(0,3);
   const mEl=document.getElementById('hub-momentum');
-  const wins=(S.wins||[]).slice(0,4);
-  if(wins.length){
-    const typeColors={Retention:'teal',Expansion:'gold',Process:'blue',Relationship:'purple',Team:'amber'};
-    mEl.innerHTML=wins.map(w=>`<div style="padding:10px 0;border-bottom:1px solid var(--border);last-child:none"><div style="display:flex;align-items:flex-start;gap:8px"><span class="badge bg-${typeColors[w.type]||'dim'}" style="margin-top:1px;flex-shrink:0">${w.type}</span><div><div style="font-size:12px;color:var(--text);line-height:1.5">${w.title}</div>${w.impact?`<div style="font-size:11px;color:var(--text-mid);margin-top:3px">${w.impact}</div>`:''}</div></div></div>`).join('');
-  } else {
-    mEl.innerHTML='<div class="empty"><div class="empty-icon">★</div><p>Log wins to see momentum here</p></div>';
-  }
+  const mInsEl=document.getElementById('momentum-insight');
+  if(mInsEl)mInsEl.textContent=wins.length?`${wins.length} win${wins.length!==1?'s':''} this cycle`:'Log wins to track momentum';
+  const typeColors={Retention:'teal',Expansion:'gold',Process:'blue',Relationship:'purple',Team:'amber'};
+  mEl.innerHTML=wins.length?wins.map(w=>`<div style="padding:9px 0;border-bottom:1px solid var(--border)"><div style="display:flex;align-items:flex-start;gap:8px"><span class="badge bg-${typeColors[w.type]||'dim'}" style="margin-top:1px;flex-shrink:0">${w.type}</span><div><div style="font-size:12px;color:var(--text);line-height:1.5">${w.title}</div>${w.impact?`<div style="font-size:11px;color:var(--text-mid);margin-top:2px">${w.impact}</div>`:''}</div></div></div>`).join(''):'<div style="padding:16px 0;text-align:center;font-size:12px;color:var(--text-dim)">Log wins to see momentum here</div>';
 
-  // Update badge
   updateBadges();
 }
 
@@ -2331,6 +2475,105 @@ function openIndicatorDrill(type, value){
   document.getElementById('drill-title').textContent=title;
   document.getElementById('drill-content').innerHTML=content;
   openModal('modal-drill');
+}
+
+
+// ================================================================
+// NORTH STAR: Portfolio Status + Top Fires + Confidence
+// ================================================================
+
+function computePortfolioStatus(nrr, riskCount, avgSkam, activeCount, highBlockers){
+  let issues=[], warnings=[];
+  if(nrr!==null&&nrr<90) issues.push(`NRR at ${nrr}% — below 90% threshold`);
+  else if(nrr!==null&&nrr<100) warnings.push(`NRR at ${nrr}% — below growth target`);
+  if(riskCount>=5) issues.push(`${riskCount} accounts risk-flagged`);
+  else if(riskCount>=3) warnings.push(`${riskCount} accounts risk-flagged`);
+  if(avgSkam>0&&avgSkam<55) issues.push(`Avg SKAM ${avgSkam} — below 55 floor`);
+  else if(avgSkam>0&&avgSkam<65) warnings.push(`Avg SKAM ${avgSkam} — below 65 target`);
+  if(highBlockers>=3) issues.push(`${highBlockers} high-impact bottlenecks unresolved`);
+  else if(highBlockers>=1) warnings.push(`${highBlockers} high-impact bottleneck${highBlockers>1?'s':''} pending`);
+
+  if(issues.length>=2) return{status:'CRITICAL',rationale:issues[0]};
+  if(issues.length===1) return{status:'WATCH',rationale:issues[0]};
+  if(warnings.length>=1) return{status:'WATCH',rationale:warnings[0]};
+  return{status:'HEALTHY',rationale:'No critical signals — portfolio tracking well'};
+}
+
+function renderTopFires(){
+  const openBlockers=(S.blockers||[]).filter(b=>!b.resolved);
+  // Priority: High impact first, then Medium, sorted by type (Escalation > Decision > Tech/Product/Stability > Resource > Process)
+  const typePriority={Escalation:0,Decision:1,Tech:2,Product:2,Stability:2,Resource:3,Process:4};
+  const fires=openBlockers.sort((a,b)=>{
+    const impA={High:0,Medium:1,Low:2}[a.impact]||1;
+    const impB={High:0,Medium:1,Low:2}[b.impact]||1;
+    if(impA!==impB)return impA-impB;
+    return(typePriority[a.type]||5)-(typePriority[b.type]||5);
+  }).slice(0,3);
+
+  const countBadge=document.getElementById('fires-count-badge');
+  const firesInsight=document.getElementById('fires-insight');
+  const listEl=document.getElementById('top-fires-list');
+  if(!listEl)return;
+
+  if(!fires.length){
+    if(countBadge)countBadge.style.display='none';
+    if(firesInsight)firesInsight.textContent='No open bottlenecks — clear to execute';
+    listEl.innerHTML=`<div style="grid-column:1/-1;text-align:center;padding:28px;background:var(--teal-d);border:1px solid rgba(0,212,140,.2);border-radius:12px">
+      <div style="font-size:20px;margin-bottom:8px">✓</div>
+      <div style="font-family:'Syne',sans-serif;font-size:14px;font-weight:700;color:var(--teal)">All clear — no items require executive attention</div>
+      <div style="font-size:12px;color:var(--text-dim);margin-top:4px">Add bottlenecks in the Bottlenecks & Asks section</div>
+    </div>`;
+    return;
+  }
+
+  if(countBadge){countBadge.textContent=openBlockers.length+' open';countBadge.style.display='';}
+  if(firesInsight){
+    const highCount=openBlockers.filter(b=>b.impact==='High').length;
+    firesInsight.textContent=highCount?`${highCount} high-impact item${highCount>1?'s':''} need a decision — showing top ${fires.length}`:`${fires.length} item${fires.length>1?'s':''} require attention`;
+  }
+
+  const impactColors={High:'var(--red)',Medium:'var(--amber)',Low:'var(--text-dim)'};
+  const typeClass={Decision:'anno-decision',Resource:'anno-resource',Escalation:'anno-escalation',Process:'anno-process',Tech:'anno-escalation',Product:'anno-process',Stability:'anno-resource'};
+
+  listEl.innerHTML=fires.map((b,i)=>{
+    const ic=impactColors[b.impact]||'var(--text-dim)';
+    const isFirst=i===0&&b.impact==='High';
+    return`<div style="background:var(--card2);border:1px solid ${ic}30;border-top:3px solid ${ic};border-radius:12px;padding:20px;display:flex;flex-direction:column;gap:12px;${isFirst?'box-shadow:0 0 24px '+ic+'20;':''}" >
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px">
+        <div style="flex:1">
+          <div style="display:flex;align-items:center;gap:7px;margin-bottom:6px">
+            <span class="badge ${typeClass[b.type]||'bg-dim'} anno-tag" style="font-size:9px">${b.type}</span>
+            <span style="font-size:10px;font-weight:700;color:${ic}">${b.impact} Impact</span>
+          </div>
+          <div style="font-size:14px;font-weight:600;color:var(--text);line-height:1.4">${b.title}</div>
+        </div>
+        <span style="font-size:24px;opacity:.25">${b.impact==='High'?'⊘':b.impact==='Medium'?'◐':'○'}</span>
+      </div>
+      ${b.ask?`<div style="padding:10px 12px;background:rgba(232,168,56,.06);border-left:2px solid var(--gold);border-radius:0 6px 6px 0">
+        <div style="font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--gold);margin-bottom:3px">The Ask</div>
+        <div style="font-size:12px;color:var(--text-mid);line-height:1.5">${b.ask}</div>
+      </div>`:''}
+      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding-top:8px;border-top:1px solid var(--border)">
+        ${b.owner?`<span style="font-size:11px;color:var(--text-dim)">→ ${b.owner}</span>`:''}
+        ${b.impactVal?`<span style="font-size:11px;color:${ic};font-weight:600">${b.impactVal}</span>`:''}
+        <button onclick="showPage('bottlenecks')" style="margin-left:auto;padding:4px 10px;background:transparent;border:1px solid var(--border);border-radius:6px;font-family:'DM Sans',sans-serif;font-size:10px;color:var(--text-dim);cursor:pointer">View all →</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function setConfidence(level){
+  ['High','Medium','Low'].forEach(l=>{
+    const btn=document.getElementById('conf-'+l.toLowerCase());
+    if(!btn)return;
+    const colors={High:['var(--teal)','var(--teal-d)','rgba(0,212,140,.3)'],Medium:['var(--amber)','var(--amber-d)','rgba(246,166,35,.3)'],Low:['var(--red)','var(--red-d)','rgba(255,61,85,.3)']};
+    const [col,bg,bdr]=colors[l];
+    if(l===level){btn.style.borderColor=bdr;btn.style.background=bg;btn.style.color=col;}
+    else{btn.style.borderColor='var(--border)';btn.style.background='transparent';btn.style.color='var(--text-dim)';}
+  });
+  if(!S.session)S.session={};
+  S.session.confidence=level;
+  S.confidence=level;
 }
 
 
